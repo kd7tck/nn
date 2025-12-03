@@ -1,0 +1,14 @@
+app-id: com.pygametemplate.dev
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: run_game_linux.sh
+modules:
+  - name: pygame-template
+    buildsystem: simple
+    build-commands:
+      - pip3 install --prefix=/app -r requirements.txt
+      - cp -r . /app/
+    sources:
+      - type: dir
+        path: ../
