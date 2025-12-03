@@ -1,0 +1,57 @@
+name: pygame-template
+version: '1.0'
+summary: A template for Pygame projects
+description: |
+  A template for Pygame projects with all the bells and whistles.
+base: core22
+confinement: strict
+grade: stable
+
+apps:
+  pygame-template:
+    command: run_game_linux.sh
+    plugs:
+      - desktop
+      - desktop-legacy
+      - opengl
+
+parts:
+  pygame-template:
+    plugin: python
+    source: .
+    requirements: [requirements.txt]
+    stage-packages:
+      - libsdl2-2.0-0
+      - libsdl2-image-2.0-0
+      - libsdl2-mixer-2.0-0
+      - libsdl2-ttf-2.0-0
+      - libportmidi0
+      - libjpeg-turbo8
+      - libpng16-16
+      - libtiff5
+      - libwebp6
+      - libx11-6
+      - libxext6
+      - libxcursor1
+      - libxinerama1
+      - libxrandr2
+      - libxss1
+      - libxi6
+      - libxrender1
+      - libxfixes3
+      - libxxf86vm1
+      - libwayland-client0
+      - libwayland-cursor0
+      - libwayland-egl1
+      - libxkbcommon0
+      - libpulse0
+      - libasound2
+      - libsamplerate0
+      - libjack-jackd2-0
+      - libportaudio2
+      - libdecor-0-0
+      - libgl1
+      - libglu1
+      - libegl1
+      - libgles2
+      - libglvnd0

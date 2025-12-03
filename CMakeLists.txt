@@ -132,6 +132,20 @@ elseif(UNIX AND NOT APPLE)
         COMMENT "Building Linux AppImage"
     )
     add_dependencies(build_appimage install_deps)
+
+    add_custom_target(build_flatpak
+        COMMAND flatpak-builder build-dir ${CMAKE_CURRENT_SOURCE_DIR}/flatpak/com.pygametemplate.dev.yml --force-clean --user --install
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Building and installing Flatpak"
+    )
+    add_dependencies(build_flatpak install_deps)
+
+    add_custom_target(build_snap
+        COMMAND snapcraft
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Building Snap package"
+    )
+    add_dependencies(build_snap install_deps)
 endif()
 
 configure_file(
