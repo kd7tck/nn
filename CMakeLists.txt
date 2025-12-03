@@ -33,7 +33,7 @@ if(WIN32)
     )
     install(FILES "${CMAKE_BINARY_DIR}/run_game.bat" DESTINATION bin)
     configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/pygametemplate.cmd.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/textgametemplate.cmd.in"
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.cmd"
         @ONLY
     )
