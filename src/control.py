@@ -36,6 +36,20 @@ class Control:
                     print("Go where?")
             elif command == "look":
                 print(self.game.get_location_description())
+            elif command == "take":
+                if len(user_input) > 1:
+                    item = user_input[1]
+                    print(self.game.take_item(item))
+                else:
+                    print("Take what?")
+            elif command == "drop":
+                if len(user_input) > 1:
+                    item = user_input[1]
+                    print(self.game.drop_item(item))
+                else:
+                    print("Drop what?")
+            elif command == "inventory":
+                print(self.game.get_inventory())
             else:
                 print("Unknown command.")
         print("Thanks for playing!")
