@@ -50,6 +50,12 @@ class Control:
                     print("Drop what?")
             elif command == "inventory":
                 print(self.game.get_inventory())
+            elif command == "examine":
+                if len(user_input) > 1:
+                    item_name = user_input[1]
+                    print(self.game.examine_item(item_name))
+                else:
+                    print("Examine what?")
             else:
                 print("Unknown command.")
         print("Thanks for playing!")
