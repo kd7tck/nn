@@ -1,4 +1,4 @@
-"""The main entry point for the game."""
+"""The main entry point for the text-based game."""
 
 from src.control import Control
 
