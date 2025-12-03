@@ -24,3 +24,7 @@ endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.py")
     install(FILES main.py DESTINATION bin)
 endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    install(DIRECTORY assets DESTINATION bin)
+endif()

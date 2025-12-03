@@ -3,6 +3,7 @@ import pygame as pg
 from .states import menu
 from .states import game as gameplay
 from . import settings
+from .sound import sound_manager
 
 class Control:
     def __init__(self):
@@ -12,6 +13,10 @@ class Control:
         self.clock = pg.time.Clock()
         self.done = False
         self.fps = settings.FPS
+        self.debug_mode = False
+        sound_manager.load_sound("click", "assets/sounds/click.wav")
+        sound_manager.load_music("assets/music/menu.ogg")
+        sound_manager.play_music()
         self.state_dict = {
             "MENU": menu.Menu(),
             "GAME": gameplay.Game()
@@ -24,6 +29,9 @@ class Control:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.done = True
+            elif event.type == pg.KEYUP:
+                if event.key == pg.K_F3:
+                    self.debug_mode = not self.debug_mode
             self.state.get_event(event)
 
     def main_game_loop(self):
@@ -43,10 +51,12 @@ class Control:
             self.flip_state()
 
     def draw(self):
-        self.state.draw(self.screen)
+        self.state.draw(self.screen, self.debug_mode)
 
     def flip_state(self):
         previous, self.state_name = self.state_name, self.state.next_state
         persist = self.state.persist
+        if self.state_name == "GAME":
+            persist["clock"] = self.clock
         self.state = self.state_dict[self.state_name]
         self.state.startup(persist)
