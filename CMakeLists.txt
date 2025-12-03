@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(PygameTemplate)
+project(TextGameTemplate)
 
 find_package(PythonInterp REQUIRED)
 
@@ -12,7 +12,7 @@ add_custom_target(install_deps
 add_custom_target(run
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/main.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Running Pygame Template"
+    COMMENT "Running Text Game Template"
 )
 
 add_dependencies(run install_deps)
@@ -23,10 +23,6 @@ endif()
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.py")
     install(FILES main.py DESTINATION bin)
-endif()
-
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
-    install(DIRECTORY assets DESTINATION bin)
 endif()
 
 if(WIN32)
@@ -53,7 +49,7 @@ if(WIN32)
     message(STATUS "To create a desktop shortcut, right-click on the Start Menu entry and select 'Send to > Desktop (create shortcut)'.")
 
     add_custom_target(build_exe
-        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --onefile --windowed --add-data "assets;assets" --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
+        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --onefile --console --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Building Windows executable with PyInstaller"
     )
@@ -81,16 +77,12 @@ elseif(APPLE)
         DESTINATION "${APP_PATH}/Contents"
     )
     install(
-        DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        DESTINATION "${APP_PATH}/Contents/Resources"
-    )
-    install(
         CODE "execute_process(COMMAND ln -sf ${APP_PATH}/Contents/MacOS/run_game.sh /usr/local/bin/${PROJECT_NAME})"
     )
     message(STATUS "To create a desktop shortcut, open the /Applications folder and drag '${PROJECT_NAME}.app' to your desktop.")
 
     add_custom_target(build_dmg
-        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --windowed --add-data "assets:assets" --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
+        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --console --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
         COMMAND hdiutil create -volname "${PROJECT_NAME}" -srcfolder "${CMAKE_BINARY_DIR}/dist/${PROJECT_NAME}.app" -ov -format UDZO "${CMAKE_BINARY_DIR}/dist/${PROJECT_NAME}.dmg"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Building macOS application bundle and DMG"
@@ -124,7 +116,7 @@ elseif(UNIX AND NOT APPLE)
     message(STATUS "To create a desktop shortcut, find '${PROJECT_NAME}' in your application menu and drag it to your desktop.")
 
     add_custom_target(build_appimage
-        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --noconfirm --add-data "assets:assets" --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
+        COMMAND ${PYTHON_EXECUTABLE} -m PyInstaller --noconfirm --name ${PROJECT_NAME} --distpath "${CMAKE_BINARY_DIR}/dist" --workpath "${CMAKE_BINARY_DIR}/build" main.py
         COMMAND curl -L -o "${CMAKE_BINARY_DIR}/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
         COMMAND chmod +x "${CMAKE_BINARY_DIR}/linuxdeploy"
         COMMAND "${CMAKE_BINARY_DIR}/linuxdeploy" --appdir "${CMAKE_BINARY_DIR}/dist/${PROJECT_NAME}" --output appimage --executable "${CMAKE_BINARY_DIR}/dist/${PROJECT_NAME}/${PROJECT_NAME}" --desktop-file "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.desktop"
