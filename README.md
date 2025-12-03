@@ -1,11 +1,17 @@
-# Text-Based Game Template
+# TextGameTemplate
 
-This repository contains a simple template for creating text-based games in Python. It provides a clean and easy-to-understand starting point for your next project.
+TextGameTemplate is a Zork-like text-based adventure game written in Python.
+
+## How to Play
+
+*   **Move between rooms:** Use the `go` command followed by a direction (e.g., `go north`).
+*   **Look around:** Use the `look` command to see a description of your current location.
+*   **Quit the game:** Use the `quit` command to exit.
 
 ## Features
 
-*   **Simple Game Loop:** A straightforward game loop is provided in `src/control.py` that handles user input and can be easily extended.
-*   **Clear Project Structure:** The project is organized with a clear separation of concerns, making it easy to navigate and build upon.
+*   **Command Parser:** A simple command parser that understands multi-word commands.
+*   **World Model:** A basic world model with interconnected rooms.
 *   **Cross-Platform Build System:** Includes a CMake build system for creating distributable packages for Windows, macOS, and Linux.
 
 ## Getting Started
@@ -33,7 +39,8 @@ The project is organized into the following directories and files:
 .
 ├── src/            # Source code
 │   ├── __init__.py
-│   └── control.py    # The main control loop
+│   ├── control.py    # The main control loop
+│   └── game.py       # The game logic and state
 ├── main.py         # The main entry point of the game
 ├── requirements.txt # Python dependencies
 └── README.md       # This file
