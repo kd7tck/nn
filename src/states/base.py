@@ -19,5 +19,5 @@ class BaseState:
     def update(self, dt):
         pass
 
-    def draw(self, surface):
+    def draw(self, surface, debug_mode=False):
         pass
