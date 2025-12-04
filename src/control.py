@@ -20,7 +20,7 @@ class Control:
         user input and prints output to the console.
         """
         print("Welcome to TextGameTemplate!")
-        print(self.game.get_location_description())
+        print(self.game.get_location_description(arrival=True))
         while not self.done:
             user_input = input("> ").lower().split()
             if not user_input:
