@@ -12,6 +12,28 @@ class Control:
         """Initializes the Control class."""
         self.done = False
         self.game = Game()
+        self.directions = {
+            "n": "north",
+            "north": "north",
+            "s": "south",
+            "south": "south",
+            "e": "east",
+            "east": "east",
+            "w": "west",
+            "west": "west",
+            "ne": "northeast",
+            "northeast": "northeast",
+            "nw": "northwest",
+            "northwest": "northwest",
+            "se": "southeast",
+            "southeast": "southeast",
+            "sw": "southwest",
+            "southwest": "southwest",
+            "u": "up",
+            "up": "up",
+            "d": "down",
+            "down": "down",
+        }
 
     def main_game_loop(self):
         """The main game loop.
@@ -28,9 +50,14 @@ class Control:
             command = user_input[0]
             if command == "quit":
                 self.done = True
+            elif command in self.directions:
+                direction = self.directions[command]
+                print(self.game.move_player(direction))
             elif command == "go":
                 if len(user_input) > 1:
                     direction = user_input[1]
+                    if direction in self.directions:
+                        direction = self.directions[direction]
                     print(self.game.move_player(direction))
                 else:
                     print("Go where?")
