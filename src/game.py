@@ -3,6 +3,7 @@
 This module contains the Game class, which manages the game's state,
 including the player's location and the world map.
 """
+from collections import defaultdict
 
 
 class Game:
@@ -12,9 +13,15 @@ class Game:
         """Initializes the Game class."""
         self.player_location = "start"
         self.inventory = []
+        self.visited_counts = defaultdict(int)
+        self.visited_counts["start"] = 1
+
         self.world_map = {
             "start": {
                 "description": "You are in a dimly lit room. There are doors to the north and east.",
+                "first_arrival_text": "You wake up in a strange, dimly lit room. Your head hurts.",
+                "transition_text": "You enter the dimly lit room.",
+                "examination_text": "The walls are bare concrete. The air smells musty.",
                 "exits": {"north": "hallway", "east": "kitchen"},
                 "items": [
                     {
@@ -25,11 +32,18 @@ class Game:
             },
             "hallway": {
                 "description": "You are in a long hallway. There are doors to the south and north.",
+                "transition_text": "You step into the long hallway.",
+                "examination_text": "The hallway seems to stretch on forever.",
+                "nth_arrival_text": {
+                    2: "You find yourself back in the long hallway."
+                },
                 "exits": {"south": "start", "north": "treasure_room"},
                 "items": [],
             },
             "kitchen": {
                 "description": "You are in a kitchen. There is a door to the west.",
+                "first_arrival_text": "You push open the door and reveal a messy kitchen.",
+                "examination_text": "Dirty dishes are piled high in the sink.",
                 "exits": {"west": "start"},
                 "items": [
                     {
@@ -40,6 +54,8 @@ class Game:
             },
             "treasure_room": {
                 "description": "You have found the treasure room!",
+                "first_arrival_text": "At last! You have discovered the legendary treasure room.",
+                "examination_text": "Gold glitters from every corner.",
                 "exits": {"south": "hallway"},
                 "items": [
                     {
@@ -50,14 +66,40 @@ class Game:
             },
         }
 
-    def get_location_description(self):
-        """Returns the description of the player's current location."""
-        description = self.world_map[self.player_location]["description"]
-        items = self.world_map[self.player_location]["items"]
+    def get_location_description(self, arrival=False):
+        """Returns the description of the player's current location.
+
+        Args:
+            arrival: Boolean indicating if the player just arrived at this location.
+        """
+        room = self.world_map[self.player_location]
+        description_parts = []
+
+        if arrival:
+            # Add transition text if present
+            if "transition_text" in room:
+                description_parts.append(room["transition_text"])
+
+            count = self.visited_counts[self.player_location]
+
+            # Check for first arrival text
+            if count == 1 and "first_arrival_text" in room:
+                description_parts.append(room["first_arrival_text"])
+            # Check for nth arrival text
+            elif "nth_arrival_text" in room and count in room["nth_arrival_text"]:
+                description_parts.append(room["nth_arrival_text"][count])
+            else:
+                description_parts.append(room["description"])
+        else:
+            # Just looking around
+            description_parts.append(room["description"])
+
+        items = room["items"]
         if items:
             item_names = [item["name"] for item in items]
-            description += " You see a " + ", ".join(item_names) + "."
-        return description
+            description_parts.append("You see a " + ", ".join(item_names) + ".")
+
+        return " ".join(description_parts)
 
     def move_player(self, direction):
         """Moves the player to a new location.
@@ -74,8 +116,10 @@ class Game:
                 item["name"] == "key" for item in self.inventory
             ):
                 return "The door is locked."
+
             self.player_location = next_location
-            return self.get_location_description()
+            self.visited_counts[next_location] += 1
+            return self.get_location_description(arrival=True)
         else:
             return "You can't go that way."
 
@@ -126,6 +170,7 @@ class Game:
 
     def examine_item(self, item_name):
         """Examines an item in the player's inventory or the current location.
+        Also allows examining the room itself.
 
         Args:
             item_name: The name of the item to examine.
@@ -133,6 +178,10 @@ class Game:
         Returns:
             The description of the item or a message if the item is not found.
         """
+        if item_name in ["room", "here"]:
+            room = self.world_map[self.player_location]
+            return room.get("examination_text", room["description"])
+
         # Check inventory first
         for item in self.inventory:
             if item["name"] == item_name:
