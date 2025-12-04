@@ -22,6 +22,7 @@ class Game:
         self.inventory = []
         self.visited_counts = defaultdict(int)
         self.visited_counts["start"] = 1
+        self.game_state = {}
 
         self.world_map = {
             "start": {
@@ -60,6 +61,19 @@ class Game:
                     {
                         "name": "sword",
                         "description": "A sharp, shiny sword.",
+                        "events": {
+                            "take": [
+                                {
+                                    "condition": {},
+                                    "actions": [
+                                        {
+                                            "type": "print",
+                                            "message": "As you grasp the hilt, you feel a surge of power.",
+                                        }
+                                    ],
+                                }
+                            ]
+                        },
                     }
                 ],
             },
@@ -90,6 +104,94 @@ class Game:
                 ],
             },
         }
+
+    def check_condition(self, condition):
+        """Checks if a condition is met.
+
+        Args:
+            condition: A dictionary defining the condition.
+
+        Returns:
+            bool: True if the condition is met, False otherwise.
+        """
+        if not condition:
+            return True
+
+        if "has_item" in condition:
+            item_name = condition["has_item"]
+            if not any(item["name"] == item_name for item in self.inventory):
+                return False
+
+        if "in_location" in condition:
+            if self.player_location != condition["in_location"]:
+                return False
+
+        if "var_true" in condition:
+            var_name = condition["var_true"]
+            if not self.game_state.get(var_name, False):
+                return False
+
+        if "var_false" in condition:
+            var_name = condition["var_false"]
+            if self.game_state.get(var_name, False):
+                return False
+
+        if "var_eq" in condition:
+            for var_name, value in condition["var_eq"].items():
+                if self.game_state.get(var_name) != value:
+                    return False
+
+        return True
+
+    def perform_action(self, action):
+        """Performs an action.
+
+        Args:
+            action: A dictionary defining the action.
+
+        Returns:
+            str: A message if the action produces output, None otherwise.
+        """
+        action_type = action.get("type")
+
+        if action_type == "print":
+            return action.get("message")
+
+        elif action_type == "set_true":
+            self.game_state[action["target"]] = True
+
+        elif action_type == "set_false":
+            self.game_state[action["target"]] = False
+
+        elif action_type == "set_val":
+            self.game_state[action["target"]] = action["value"]
+
+        elif action_type == "modify_room":
+            room_id = action.get("room_id")
+            if room_id in self.world_map:
+                self.world_map[room_id][action["property"]] = action["value"]
+
+        return None
+
+    def process_events(self, source, trigger):
+        """Processes events for a given source and trigger.
+
+        Args:
+            source: The dictionary containing the events (room or item).
+            trigger: The trigger string (e.g., 'enter', 'take').
+
+        Returns:
+            list: A list of messages produced by the events.
+        """
+        messages = []
+        if "events" in source and trigger in source["events"]:
+            for event in source["events"][trigger]:
+                if self.check_condition(event.get("condition")):
+                    for action in event.get("actions", []):
+                        msg = self.perform_action(action)
+                        if msg:
+                            messages.append(msg)
+        return messages
 
     def get_location_description(self, arrival=False):
         """Returns the description of the player's current location.
@@ -141,22 +243,35 @@ class Game:
             str: A message describing the result of the movement attempt,
             such as the new room description or an error message if blocked.
         """
-        if direction in self.world_map[self.player_location]["exits"]:
-            next_location = self.world_map[self.player_location]["exits"][direction]
+        current_room = self.world_map[self.player_location]
+        if direction in current_room["exits"]:
+            next_location = current_room["exits"][direction]
+
+            # Legacy logic
             if next_location == "treasure_room" and not any(
                 item["name"] == "key" for item in self.inventory
             ):
                 return "The door is locked."
 
-            # Demonstrate blocked path for "garden" if user doesn't have the sword (just as an example)
             if next_location == "garden" and not any(
                 item["name"] == "sword" for item in self.inventory
             ):
                 return "Thick vines block the path to the garden. You need something to cut them."
 
+            # Process exit events
+            exit_msgs = self.process_events(current_room, "exit")
+
             self.player_location = next_location
             self.visited_counts[next_location] += 1
-            return self.get_location_description(arrival=True)
+
+            # Process enter events
+            enter_msgs = self.process_events(self.world_map[next_location], "enter")
+
+            desc = self.get_location_description(arrival=True)
+
+            # Combine all messages
+            all_parts = exit_msgs + [desc] + enter_msgs
+            return "\n".join(all_parts)
         else:
             return "You can't go that way."
 
@@ -174,7 +289,11 @@ class Game:
             if item["name"] == item_name:
                 location_items.remove(item)
                 self.inventory.append(item)
-                return f"You take the {item_name}."
+
+                msgs = [f"You take the {item_name}."]
+                msgs.extend(self.process_events(item, "take"))
+
+                return "\n".join(msgs)
         return f"There is no {item_name} here."
 
     def drop_item(self, item_name):
@@ -190,7 +309,11 @@ class Game:
             if item["name"] == item_name:
                 self.inventory.remove(item)
                 self.world_map[self.player_location]["items"].append(item)
-                return f"You drop the {item_name}."
+
+                msgs = [f"You drop the {item_name}."]
+                msgs.extend(self.process_events(item, "drop"))
+
+                return "\n".join(msgs)
         return f"You don't have a {item_name}."
 
     def get_inventory(self):
@@ -218,14 +341,28 @@ class Game:
         """
         if item_name in ["room", "here"]:
             room = self.world_map[self.player_location]
-            return room.get("examination_text", room["description"])
+            # Process examine events for room
+            msgs = self.process_events(room, "examine")
+            desc = room.get("examination_text", room["description"])
+            if msgs:
+                return desc + "\n" + "\n".join(msgs)
+            return desc
 
         # Check inventory first
         for item in self.inventory:
             if item["name"] == item_name:
-                return item["description"]
+                msgs = self.process_events(item, "examine")
+                desc = item["description"]
+                if msgs:
+                    return desc + "\n" + "\n".join(msgs)
+                return desc
+
         # Check current location
         for item in self.world_map[self.player_location]["items"]:
             if item["name"] == item_name:
-                return item["description"]
+                msgs = self.process_events(item, "examine")
+                desc = item["description"]
+                if msgs:
+                    return desc + "\n" + "\n".join(msgs)
+                return desc
         return f"You don't see a {item_name} here."
