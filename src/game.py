@@ -1,16 +1,23 @@
 """The main game logic for the text-based game.
 
 This module contains the Game class, which manages the game's state,
-including the player's location and the world map.
+including the player's location, inventory, and the world map.
 """
 from collections import defaultdict
 
 
 class Game:
-    """Manages the game's state and logic."""
+    """Manages the game's state and logic.
+
+    This class handles the core mechanics of the game, including player movement,
+    interaction with items, and tracking the state of the world.
+    """
 
     def __init__(self):
-        """Initializes the Game class."""
+        """Initializes the Game class.
+
+        Sets up the initial player location, inventory, visited counts, and the world map.
+        """
         self.player_location = "start"
         self.inventory = []
         self.visited_counts = defaultdict(int)
@@ -89,6 +96,11 @@ class Game:
 
         Args:
             arrival: Boolean indicating if the player just arrived at this location.
+                Defaults to False.
+
+        Returns:
+            str: A string containing the description of the current location,
+            including any dynamic text based on visit counts and items present.
         """
         room = self.world_map[self.player_location]
         description_parts = []
@@ -123,10 +135,11 @@ class Game:
         """Moves the player to a new location.
 
         Args:
-            direction: The direction to move the player.
+            direction: The direction to move the player (e.g., 'north', 'south').
 
         Returns:
-            A message to be printed to the console.
+            str: A message describing the result of the movement attempt,
+            such as the new room description or an error message if blocked.
         """
         if direction in self.world_map[self.player_location]["exits"]:
             next_location = self.world_map[self.player_location]["exits"][direction]
@@ -154,7 +167,7 @@ class Game:
             item_name: The name of the item to take.
 
         Returns:
-            A message to be printed to the console.
+            str: A message indicating whether the item was successfully taken or not.
         """
         location_items = self.world_map[self.player_location]["items"]
         for item in location_items:
@@ -171,7 +184,7 @@ class Game:
             item_name: The name of the item to drop.
 
         Returns:
-            A message to be printed to the console.
+            str: A message indicating whether the item was successfully dropped or not.
         """
         for item in self.inventory:
             if item["name"] == item_name:
@@ -184,7 +197,7 @@ class Game:
         """Returns the player's inventory.
 
         Returns:
-            A string containing the player's inventory.
+            str: A string listing the items currently in the player's inventory.
         """
         if self.inventory:
             item_names = [item["name"] for item in self.inventory]
@@ -194,13 +207,14 @@ class Game:
 
     def examine_item(self, item_name):
         """Examines an item in the player's inventory or the current location.
+
         Also allows examining the room itself.
 
         Args:
-            item_name: The name of the item to examine.
+            item_name: The name of the item to examine, or 'room'/'here' to examine the room.
 
         Returns:
-            The description of the item or a message if the item is not found.
+            str: The description of the item or room, or a message if the item is not found.
         """
         if item_name in ["room", "here"]:
             room = self.world_map[self.player_location]

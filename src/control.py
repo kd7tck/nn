@@ -1,15 +1,23 @@
 """The main control loop for the game.
 
-This module contains the Control class, which manages the game's main loop.
+This module contains the Control class, which manages the game's main loop,
+processing user input and interacting with the Game instance.
 """
 from src.game import Game
 
 
 class Control:
-    """Manages the game's main loop."""
+    """Manages the game's main loop.
+
+    This class interprets user commands, calls the appropriate methods on the
+    Game object, and displays the results to the user.
+    """
 
     def __init__(self):
-        """Initializes the Control class."""
+        """Initializes the Control class.
+
+        Sets up the game instance, the 'done' flag, and the direction mappings.
+        """
         self.done = False
         self.game = Game()
         self.directions = {
@@ -40,6 +48,9 @@ class Control:
 
         This loop runs until the `done` attribute is set to True. It handles
         user input and prints output to the console.
+
+        Returns:
+            None
         """
         print("Welcome to TextGameTemplate!")
         print(self.game.get_location_description(arrival=True))
