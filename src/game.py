@@ -380,7 +380,7 @@ class Game:
         """
         if self.inventory:
             item_names = [item["name"] for item in self.inventory]
-            return "You are carrying: " + ", ".join(item_names)
+            return "You are carrying: " + ", ".join(item_names) + "."
         else:
             return "Your inventory is empty."
 
