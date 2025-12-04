@@ -58,6 +58,17 @@ class Control:
             user_input = input("> ").lower().split()
             if not user_input:
                 continue
+
+            if self.game.dialogue_active:
+                if user_input[0] in ["quit", "exit", "bye"]:
+                    self.game.end_dialogue()
+                    print("You stop talking.")
+                elif user_input[0].isdigit():
+                    print(self.game.make_dialogue_choice(int(user_input[0])))
+                else:
+                    print("Please enter the number of your choice, or 'quit' to end the conversation.")
+                continue
+
             command = user_input[0]
             if command == "quit":
                 self.done = True
