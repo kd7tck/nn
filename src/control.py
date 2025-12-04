@@ -76,13 +76,13 @@ class Control:
                 print(self.game.get_location_description())
             elif command == "take":
                 if len(user_input) > 1:
-                    item = user_input[1]
+                    item = " ".join(user_input[1:])
                     print(self.game.take_item(item))
                 else:
                     print("Take what?")
             elif command == "drop":
                 if len(user_input) > 1:
-                    item = user_input[1]
+                    item = " ".join(user_input[1:])
                     print(self.game.drop_item(item))
                 else:
                     print("Drop what?")
@@ -90,7 +90,7 @@ class Control:
                 print(self.game.get_inventory())
             elif command == "examine":
                 if len(user_input) > 1:
-                    item_name = user_input[1]
+                    item_name = " ".join(user_input[1:])
                     print(self.game.examine_item(item_name))
                 else:
                     print("Examine what?")
