@@ -24,6 +24,11 @@ class Game:
         self.visited_counts["start"] = 1
         self.game_state = {}
 
+        self.dialogue_active = False
+        self.current_dialogue = None
+        self.current_dialogue_node_id = None
+        self.current_character_name = None
+
         self.world_map = {
             "start": {
                 "description": "You are in a dimly lit room. There are doors to the north, east, and northeast.",
@@ -211,6 +216,18 @@ class Game:
             room_id = action.get("room_id")
             if room_id in self.world_map:
                 self.world_map[room_id][action["property"]] = action["value"]
+
+        elif action_type == "add_item":
+            item = action.get("item")
+            if item:
+                self.inventory.append(item)
+
+        elif action_type == "remove_item":
+            item_name = action.get("item_name")
+            for item in self.inventory:
+                 if item["name"] == item_name:
+                      self.inventory.remove(item)
+                      break
 
         return None
 
@@ -460,11 +477,93 @@ class Game:
         if "characters" in room:
             for char in room["characters"]:
                 if char["name"] == character_name:
-                    # You could add event processing here too if needed (e.g. "talk" trigger)
-                    msgs, _ = self.process_events(char, "talk")
+                    msgs, blocked = self.process_events(char, "talk")
+                    if blocked:
+                        return "\n".join(msgs)
+
                     dialogue = char.get("dialogue", "They have nothing to say.")
+
+                    if isinstance(dialogue, dict):
+                        # Start complex dialogue
+                        self.dialogue_active = True
+                        self.current_dialogue = dialogue
+                        self.current_dialogue_node_id = dialogue.get("start_node")
+                        self.current_character_name = char["name"]
+                        return self._get_dialogue_text(msgs)
+
                     if msgs:
                          return dialogue + "\n" + "\n".join(msgs)
                     return f'{char["name"]} says: "{dialogue}"'
 
         return f"There is no one named {character_name} here."
+
+    def _get_dialogue_text(self, initial_msgs=None):
+        """Helper to format the current dialogue text and options."""
+        if not self.dialogue_active or not self.current_dialogue:
+            return ""
+
+        node = self.current_dialogue["nodes"][self.current_dialogue_node_id]
+        text = node.get("text", "")
+        if initial_msgs:
+            text = "\n".join(initial_msgs) + "\n" + text
+
+        options_text = []
+        valid_options = []
+        for opt in node.get("options", []):
+            if self.check_condition(opt.get("condition")):
+                valid_options.append(opt)
+
+        for i, opt in enumerate(valid_options):
+            options_text.append(f"{i + 1}. {opt.get('text')}")
+
+        if options_text:
+            return text + "\n" + "\n".join(options_text)
+        return text
+
+    def make_dialogue_choice(self, choice_index):
+        """Processes the player's choice in a dialogue.
+
+        Args:
+            choice_index: The 1-based index of the choice.
+
+        Returns:
+            str: The result of the choice (next node text or end message).
+        """
+        if not self.dialogue_active:
+             return "You are not in a conversation."
+
+        node = self.current_dialogue["nodes"][self.current_dialogue_node_id]
+        valid_options = []
+        for opt in node.get("options", []):
+            if self.check_condition(opt.get("condition")):
+                valid_options.append(opt)
+
+        if choice_index < 1 or choice_index > len(valid_options):
+            return "Invalid choice."
+
+        choice = valid_options[choice_index - 1]
+
+        # Execute actions
+        for action in choice.get("actions", []):
+            self.perform_action(action)
+
+        next_node_id = choice.get("next_node")
+
+        if next_node_id:
+            self.current_dialogue_node_id = next_node_id
+            # Execute enter actions for the new node?
+            # The spec didn't strictly say so but it's good practice.
+            # Current design doesn't support 'actions' on nodes yet, just options.
+            # But the user might want node actions later.
+            return self._get_dialogue_text()
+        else:
+            char_name = self.current_character_name
+            self.end_dialogue()
+            return f"You stop talking to the {char_name}."
+
+    def end_dialogue(self):
+        """Ends the current dialogue session."""
+        self.dialogue_active = False
+        self.current_dialogue = None
+        self.current_dialogue_node_id = None
+        self.current_character_name = None
