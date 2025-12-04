@@ -12,11 +12,25 @@ class TestGameLogic(unittest.TestCase):
     """Test cases for Game logic including conditions and actions."""
 
     def setUp(self):
-        """Set up a new Game instance before each test."""
+        """Set up a new Game instance before each test.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game = Game()
 
     def test_check_condition_basics(self):
-        """Test basic conditions."""
+        """Test basic conditions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Test empty condition
         self.assertTrue(self.game.check_condition({}))
         self.assertTrue(self.game.check_condition(None))
@@ -27,13 +41,27 @@ class TestGameLogic(unittest.TestCase):
         self.assertFalse(self.game.check_condition({"in_location": "kitchen"}))
 
     def test_check_condition_items(self):
-        """Test has_item condition."""
+        """Test has_item condition.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.inventory = [{"name": "key"}]
         self.assertTrue(self.game.check_condition({"has_item": "key"}))
         self.assertFalse(self.game.check_condition({"has_item": "sword"}))
 
     def test_check_condition_vars(self):
-        """Test variable conditions (var_true, var_false, var_eq)."""
+        """Test variable conditions (var_true, var_false, var_eq).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.game_state = {"door_open": True, "counter": 5}
 
         # var_true
@@ -50,7 +78,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertFalse(self.game.check_condition({"var_eq": {"missing_var": 1}}))
 
     def test_check_condition_not(self):
-        """Test the 'not' condition."""
+        """Test the 'not' condition.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Not empty (true) -> False
         self.assertFalse(self.game.check_condition({"not": {}}))
 
@@ -59,7 +94,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertTrue(self.game.check_condition({"not": {"has_item": "sword"}}))
 
     def test_perform_action(self):
-        """Test performing actions."""
+        """Test performing actions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Print action
         msg = self.game.perform_action({"type": "print", "message": "Hello"})
         self.assertEqual(msg, "Hello")
@@ -95,7 +137,14 @@ class TestGameLogic(unittest.TestCase):
         # Should not raise error
 
     def test_process_events(self):
-        """Test processing events."""
+        """Test processing events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Setup a custom object with events
         obj = {
             "events": {
@@ -136,7 +185,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertFalse(blocked)
 
     def test_process_events_block(self):
-        """Test blocking events."""
+        """Test blocking events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         obj = {
             "events": {
                 "go_north": [
@@ -154,7 +210,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertTrue(blocked)
 
     def test_location_description_variants(self):
-        """Test different variants of location descriptions."""
+        """Test different variants of location descriptions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         room = self.game.world_map["start"]
         # Add a custom item
         room["items"].append({"name": "rock", "description": "A rock"})
@@ -183,7 +246,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertIn("You find yourself back in the long hallway.", desc)
 
     def test_examine_item_complex(self):
-        """Test examine item with events."""
+        """Test examine item with events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Mock an item with examine event
         item = {
             "name": "magic_orb",
@@ -203,7 +273,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertIn("It hums with power.", desc)
 
     def test_examine_item_in_room_with_event(self):
-        """Test examining an item in the room that has events."""
+        """Test examining an item in the room that has events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         item = {
             "name": "statue",
             "description": "A stone statue.",
@@ -222,7 +299,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertIn("It seems to be watching you.", desc)
 
     def test_locked_door(self):
-        """Test the legacy locked door logic (now implemented via events)."""
+        """Test the legacy locked door logic (now implemented via events).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Move to hallway
         self.game.move_player("north")
         self.assertEqual(self.game.player_location, "hallway")
@@ -241,7 +325,14 @@ class TestGameLogic(unittest.TestCase):
         self.assertEqual(self.game.player_location, "treasure_room")
 
     def test_examine_room_event(self):
-        """Test examine room with events."""
+        """Test examine room with events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         room = self.game.world_map["start"]
         room["events"] = {
             "examine": [

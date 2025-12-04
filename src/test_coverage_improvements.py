@@ -5,21 +5,50 @@ from src.control import Control
 
 class TestCoverageImprovements(unittest.TestCase):
     def setUp(self):
+        """Set up for tests.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game = Game()
         self.control = Control()
 
     def test_get_article_empty(self):
-        """Test _get_article with empty string."""
+        """Test _get_article with empty string.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.assertEqual(self.game._get_article(""), "")
         self.assertEqual(self.game._get_article(None), "")
 
     def test_format_item_list_empty(self):
-        """Test _format_item_list with empty list."""
+        """Test _format_item_list with empty list.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.assertEqual(self.game._format_item_list([]), "")
         self.assertEqual(self.game._format_item_list(None), "")
 
     def test_perform_action_modify_room(self):
-        """Test modify_room action."""
+        """Test modify_room action.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Setup a dummy room in world map
         self.game.world_map["test_room"] = {"description": "Old description"}
 
@@ -33,7 +62,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertEqual(self.game.world_map["test_room"]["description"], "New description")
 
     def test_perform_action_add_remove_item(self):
-        """Test add_item and remove_item actions."""
+        """Test add_item and remove_item actions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         item = {"name": "test_item", "description": "desc"}
 
         # Test add_item
@@ -47,13 +83,27 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertNotIn(item, self.game.inventory)
 
     def test_perform_action_set_val(self):
-        """Test set_val action."""
+        """Test set_val action.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         action = {"type": "set_val", "target": "test_var", "value": 123}
         self.game.perform_action(action)
         self.assertEqual(self.game.game_state.get("test_var"), 123)
 
     def test_process_events_blocked(self):
-        """Test process_events returning blocked state."""
+        """Test process_events returning blocked state.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         source = {
             "events": {
                 "test_trigger": [
@@ -71,7 +121,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertEqual(msgs, ["Blocked!"])
 
     def test_process_events_blocked_no_message(self):
-        """Test process_events blocked without message."""
+        """Test process_events blocked without message.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         source = {
             "events": {
                 "test_trigger": [
@@ -87,7 +144,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertEqual(msgs, [])
 
     def test_get_location_description_variations(self):
-        """Test get_location_description with various text keys."""
+        """Test get_location_description with various text keys.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Mock world map
         self.game.player_location = "test_loc"
         self.game.visited_counts["test_loc"] = 1
@@ -117,7 +181,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertIn("Back again", desc)
 
     def test_move_player_blocked_by_exit_event(self):
-        """Test move_player being blocked by exit_{direction} event."""
+        """Test move_player being blocked by exit_{direction} event.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.player_location = "start"
         self.game.world_map["start"]["exits"]["north"] = "hallway"
         self.game.world_map["start"]["events"] = {
@@ -134,7 +205,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertEqual(self.game.player_location, "start")
 
     def test_examine_room_and_items(self):
-        """Test examine command for room and items."""
+        """Test examine command for room and items.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.player_location = "start"
         self.game.world_map["start"]["items"] = [{"name": "rock", "description": "Just a rock"}]
         self.game.world_map["start"]["characters"] = [{"name": "bob", "description": "It's Bob"}]
@@ -154,7 +232,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertIn("don't see a ghost", self.game.examine_item("ghost"))
 
     def test_talk_to_character_blocked(self):
-        """Test talking to a character blocked by event."""
+        """Test talking to a character blocked by event.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.player_location = "start"
         self.game.world_map["start"]["characters"] = [
             {
@@ -177,7 +262,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertFalse(self.game.dialogue_active)
 
     def test_complex_dialogue_flow(self):
-        """Test complex dialogue interactions."""
+        """Test complex dialogue interactions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         dialogue_tree = {
             "start_node": "node1",
             "nodes": {
@@ -231,7 +323,14 @@ class TestCoverageImprovements(unittest.TestCase):
         self.assertTrue(self.game.game_state.get("talked_node2"))
 
     def test_control_input_handling(self):
-        """Test Control class input handling for various commands."""
+        """Test Control class input handling for various commands.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Mock print
         with patch('builtins.print') as mock_print:
             # Quit

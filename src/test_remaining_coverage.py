@@ -5,11 +5,26 @@ from src.control import Control
 
 class TestRemainingCoverage(unittest.TestCase):
     def setUp(self):
+        """Set up for tests.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game = Game()
         self.control = Control()
 
     def test_process_events_check_condition_false(self):
-        """Test process_events where condition is not met."""
+        """Test process_events where condition is not met.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         source = {
             "events": {
                 "test": [
@@ -25,7 +40,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertEqual(msgs, [])
 
     def test_process_events_perform_action_output(self):
-        """Test process_events capturing action output."""
+        """Test process_events capturing action output.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         source = {
             "events": {
                 "test": [
@@ -43,21 +65,42 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertEqual(msgs, ["Hello World"])
 
     def test_get_location_description_transition(self):
-        """Test get_location_description with transition text."""
+        """Test get_location_description with transition text.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["transition_text"] = "Entering start."
         self.game.visited_counts["start"] = 2 # Force non-first arrival
         desc = self.game.get_location_description(arrival=True)
         self.assertIn("Entering start.", desc)
 
     def test_format_item_list_multiple(self):
-        """Test _format_item_list with various lengths."""
+        """Test _format_item_list with various lengths.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         items = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
         self.assertEqual(self.game._format_item_list(items[:1]), "an a")
         self.assertEqual(self.game._format_item_list(items[:2]), "an a and a b")
         self.assertEqual(self.game._format_item_list(items), "an a, a b, and a c")
 
     def test_move_player_generic_exit_blocked(self):
-        """Test move_player blocked by generic exit event."""
+        """Test move_player blocked by generic exit event.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["events"] = {
             "exit": [
                 {
@@ -71,7 +114,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertEqual(self.game.player_location, "start")
 
     def test_move_player_generic_exit_message(self):
-        """Test move_player with generic exit message (non-blocking)."""
+        """Test move_player with generic exit message (non-blocking).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["events"] = {
             "exit": [
                 {
@@ -85,7 +135,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertEqual(self.game.player_location, "hallway")
 
     def test_take_item_blocked(self):
-        """Test take_item blocked by event."""
+        """Test take_item blocked by event.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["items"] = [
             {
                 "name": "cursed_gold",
@@ -105,7 +162,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertNotIn({"name": "cursed_gold", "description": "Gold"}, self.game.inventory)
 
     def test_drop_item_blocked(self):
-        """Test drop_item blocked by event."""
+        """Test drop_item blocked by event.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         item = {
             "name": "sticky_ball",
             "description": "Sticky",
@@ -124,7 +188,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn(item, self.game.inventory)
 
     def test_examine_item_event(self):
-        """Test examine_item triggering events."""
+        """Test examine_item triggering events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["items"] = [
             {
                 "name": "orb",
@@ -175,7 +246,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("You feel cold.", msg)
 
     def test_talk_to_character_event_message(self):
-        """Test talk_to_character triggering event messages."""
+        """Test talk_to_character triggering event messages.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["characters"] = [
             {
                 "name": "bard",
@@ -196,7 +274,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("La la la.", msg)
 
     def test_talk_to_character_event_message_complex(self):
-        """Test talk_to_character triggering event messages with complex dialogue."""
+        """Test talk_to_character triggering event messages with complex dialogue.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         dialogue = {
             "start_node": "start",
             "nodes": {"start": {"text": "Hello", "options": []}}
@@ -221,7 +306,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("Hello", msg)
 
     def test_make_dialogue_choice_invalid(self):
-        """Test invalid dialogue choices."""
+        """Test invalid dialogue choices.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.dialogue_active = True
         self.game.current_dialogue = {
             "start_node": "start",
@@ -238,12 +330,26 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertEqual(self.game.make_dialogue_choice(2), "Invalid choice.")
 
     def test_make_dialogue_choice_not_active(self):
-        """Test make_dialogue_choice when not active."""
+        """Test make_dialogue_choice when not active.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.dialogue_active = False
         self.assertEqual(self.game.make_dialogue_choice(1), "You are not in a conversation.")
 
     def test_perform_action_set_true_false(self):
-        """Test set_true and set_false actions."""
+        """Test set_true and set_false actions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.perform_action({"type": "set_true", "target": "flag"})
         self.assertTrue(self.game.game_state.get("flag"))
 
@@ -251,7 +357,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertFalse(self.game.game_state.get("flag"))
 
     def test_control_dialogue_interaction(self):
-        """Test Control loop dialogue interactions."""
+        """Test Control loop dialogue interactions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Setup dialogue
         self.control.game.dialogue_active = True
         self.control.game.current_dialogue = {
@@ -293,7 +406,14 @@ class TestRemainingCoverage(unittest.TestCase):
             self.assertTrue(any("Please enter the number" in str(c) for c in mock_print.mock_calls))
 
     def test_examine_inventory_and_location_item(self):
-        """Test examine_item finding items in inventory and location explicitly."""
+        """Test examine_item finding items in inventory and location explicitly.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         inv_item = {"name": "inv_item", "description": "In pocket."}
         loc_item = {"name": "loc_item", "description": "On floor."}
 
@@ -304,7 +424,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("On floor.", self.game.examine_item("loc_item"))
 
     def test_examine_inventory_item_with_event(self):
-        """Test examine_item for inventory item with event message."""
+        """Test examine_item for inventory item with event message.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         inv_item = {
             "name": "magic_orb",
             "description": "It glows.",
@@ -323,7 +450,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("You hear humming.", desc)
 
     def test_examine_location_item_with_event(self):
-        """Test examine_item for location item with event message."""
+        """Test examine_item for location item with event message.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         loc_item = {
             "name": "ancient_rune",
             "description": "Carved in stone.",
@@ -342,7 +476,14 @@ class TestRemainingCoverage(unittest.TestCase):
         self.assertIn("It pulses.", desc)
 
     def test_control_talk_variations(self):
-        """Test control talk command variations."""
+        """Test control talk command variations.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         with patch('builtins.print') as mock_print:
             with patch('builtins.input', side_effect=["talk", "talk to", "quit"]):
                 self.control.main_game_loop()
@@ -352,12 +493,26 @@ class TestRemainingCoverage(unittest.TestCase):
             self.assertFalse(any("no one named to" in str(c) for c in mock_print.mock_calls))
 
     def test_get_dialogue_text_inactive(self):
-        """Test _get_dialogue_text when dialogue is not active."""
+        """Test _get_dialogue_text when dialogue is not active.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.dialogue_active = False
         self.assertEqual(self.game._get_dialogue_text(), "")
 
     def test_talk_to_character_simple_no_events(self):
-        """Test talk_to_character with simple dialogue and no events."""
+        """Test talk_to_character with simple dialogue and no events.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.game.world_map["start"]["characters"] = [
             {
                 "name": "simple_npc",

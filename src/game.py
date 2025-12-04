@@ -17,6 +17,12 @@ class Game:
         """Initializes the Game class.
 
         Sets up the initial player location, inventory, visited counts, and the world map.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.player_location = "start"
         self.inventory = []
@@ -537,7 +543,14 @@ class Game:
         return f"There is no one named {character_name} here."
 
     def _get_dialogue_text(self, initial_msgs=None):
-        """Helper to format the current dialogue text and options."""
+        """Helper to format the current dialogue text and options.
+
+        Args:
+            initial_msgs: A list of messages to prepend to the dialogue text.
+
+        Returns:
+            str: The formatted dialogue text and options.
+        """
         if not self.dialogue_active or not self.current_dialogue:
             return ""
 
@@ -601,7 +614,16 @@ class Game:
             return f"You stop talking to the {char_name}."
 
     def end_dialogue(self):
-        """Ends the current dialogue session."""
+        """Ends the current dialogue session.
+
+        Resets the dialogue state.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.dialogue_active = False
         self.current_dialogue = None
         self.current_dialogue_node_id = None
