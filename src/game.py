@@ -41,6 +41,21 @@ class Game:
                         "description": "A small, rusty key.",
                     }
                 ],
+                "events": {
+                    "exit_northeast": [
+                        {
+                            "condition": {
+                                "not": {"has_item": "sword"}
+                            },
+                            "actions": [
+                                {
+                                    "type": "block",
+                                    "message": "Thick vines block the path to the garden. You need something to cut them."
+                                }
+                            ]
+                        }
+                    ]
+                }
             },
             "hallway": {
                 "description": "You are in a long hallway. There are doors to the south and north.",
@@ -51,6 +66,21 @@ class Game:
                 },
                 "exits": {"south": "start", "north": "treasure_room"},
                 "items": [],
+                "events": {
+                    "exit_north": [
+                        {
+                            "condition": {
+                                "not": {"has_item": "key"}
+                            },
+                            "actions": [
+                                {
+                                    "type": "block",
+                                    "message": "The door is locked."
+                                }
+                            ]
+                        }
+                    ]
+                }
             },
             "kitchen": {
                 "description": "You are in a kitchen. There is a door to the west and a hatch to the cellar down below.",
@@ -117,6 +147,10 @@ class Game:
         if not condition:
             return True
 
+        if "not" in condition:
+            if self.check_condition(condition["not"]):
+                return False
+
         if "has_item" in condition:
             item_name = condition["has_item"]
             if not any(item["name"] == item_name for item in self.inventory):
@@ -181,17 +215,28 @@ class Game:
             trigger: The trigger string (e.g., 'enter', 'take').
 
         Returns:
-            list: A list of messages produced by the events.
+            tuple: A tuple (messages, blocked).
+                messages (list): A list of messages produced by the events.
+                blocked (bool): True if an action blocked the operation, False otherwise.
         """
         messages = []
+        blocked = False
         if "events" in source and trigger in source["events"]:
             for event in source["events"][trigger]:
                 if self.check_condition(event.get("condition")):
                     for action in event.get("actions", []):
+                        if action.get("type") == "block":
+                            blocked = True
+                            if "message" in action:
+                                messages.append(action["message"])
+                            # If blocked, we usually stop processing further events for this trigger
+                            # or at least signal blocking.
+                            return messages, blocked
+
                         msg = self.perform_action(action)
                         if msg:
                             messages.append(msg)
-        return messages
+        return messages, blocked
 
     def get_location_description(self, arrival=False):
         """Returns the description of the player's current location.
@@ -247,25 +292,23 @@ class Game:
         if direction in current_room["exits"]:
             next_location = current_room["exits"][direction]
 
-            # Legacy logic
-            if next_location == "treasure_room" and not any(
-                item["name"] == "key" for item in self.inventory
-            ):
-                return "The door is locked."
+            # Check specific directional exit events first (for blocks)
+            exit_trigger = f"exit_{direction}"
+            msgs, blocked = self.process_events(current_room, exit_trigger)
+            if blocked:
+                return "\n".join(msgs)
 
-            if next_location == "garden" and not any(
-                item["name"] == "sword" for item in self.inventory
-            ):
-                return "Thick vines block the path to the garden. You need something to cut them."
+            # Process generic exit events
+            generic_exit_msgs, _ = self.process_events(current_room, "exit")
 
-            # Process exit events
-            exit_msgs = self.process_events(current_room, "exit")
+            # Combine generic exit messages with any non-blocking specific exit messages
+            exit_msgs = msgs + generic_exit_msgs
 
             self.player_location = next_location
             self.visited_counts[next_location] += 1
 
             # Process enter events
-            enter_msgs = self.process_events(self.world_map[next_location], "enter")
+            enter_msgs, _ = self.process_events(self.world_map[next_location], "enter")
 
             desc = self.get_location_description(arrival=True)
 
@@ -287,13 +330,18 @@ class Game:
         location_items = self.world_map[self.player_location]["items"]
         for item in location_items:
             if item["name"] == item_name:
+                msgs, blocked = self.process_events(item, "take")
+
+                if blocked:
+                     return "\n".join(msgs)
+
                 location_items.remove(item)
                 self.inventory.append(item)
 
-                msgs = [f"You take the {item_name}."]
-                msgs.extend(self.process_events(item, "take"))
+                output_msgs = [f"You take the {item_name}."]
+                output_msgs.extend(msgs)
 
-                return "\n".join(msgs)
+                return "\n".join(output_msgs)
         return f"There is no {item_name} here."
 
     def drop_item(self, item_name):
@@ -307,13 +355,18 @@ class Game:
         """
         for item in self.inventory:
             if item["name"] == item_name:
+                msgs, blocked = self.process_events(item, "drop")
+
+                if blocked:
+                    return "\n".join(msgs)
+
                 self.inventory.remove(item)
                 self.world_map[self.player_location]["items"].append(item)
 
-                msgs = [f"You drop the {item_name}."]
-                msgs.extend(self.process_events(item, "drop"))
+                output_msgs = [f"You drop the {item_name}."]
+                output_msgs.extend(msgs)
 
-                return "\n".join(msgs)
+                return "\n".join(output_msgs)
         return f"You don't have a {item_name}."
 
     def get_inventory(self):
@@ -342,7 +395,7 @@ class Game:
         if item_name in ["room", "here"]:
             room = self.world_map[self.player_location]
             # Process examine events for room
-            msgs = self.process_events(room, "examine")
+            msgs, _ = self.process_events(room, "examine")
             desc = room.get("examination_text", room["description"])
             if msgs:
                 return desc + "\n" + "\n".join(msgs)
@@ -351,7 +404,7 @@ class Game:
         # Check inventory first
         for item in self.inventory:
             if item["name"] == item_name:
-                msgs = self.process_events(item, "examine")
+                msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
@@ -360,7 +413,7 @@ class Game:
         # Check current location
         for item in self.world_map[self.player_location]["items"]:
             if item["name"] == item_name:
-                msgs = self.process_events(item, "examine")
+                msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
