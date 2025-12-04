@@ -262,6 +262,46 @@ class Game:
                             messages.append(msg)
         return messages, blocked
 
+    def _get_article(self, word):
+        """Determines the appropriate indefinite article ('a' or 'an') for a word.
+
+        Args:
+            word: The word to determine the article for.
+
+        Returns:
+            str: 'a' or 'an'.
+        """
+        if not word:
+            return ""
+        if word[0].lower() in "aeiou":
+            return "an"
+        return "a"
+
+    def _format_item_list(self, items):
+        """Formats a list of item names into a grammatically correct string.
+
+        Args:
+            items: A list of item dictionaries.
+
+        Returns:
+            str: A formatted string listing the items (e.g., "a sword and an apple").
+        """
+        if not items:
+            return ""
+
+        formatted_items = []
+        for item in items:
+            name = item["name"]
+            article = self._get_article(name)
+            formatted_items.append(f"{article} {name}")
+
+        if len(formatted_items) == 1:
+            return formatted_items[0]
+        elif len(formatted_items) == 2:
+            return f"{formatted_items[0]} and {formatted_items[1]}"
+        else:
+            return f"{', '.join(formatted_items[:-1])}, and {formatted_items[-1]}"
+
     def get_location_description(self, arrival=False):
         """Returns the description of the player's current location.
 
@@ -297,8 +337,7 @@ class Game:
 
         items = room["items"]
         if items:
-            item_names = [item["name"] for item in items]
-            description_parts.append("You see a " + ", ".join(item_names) + ".")
+            description_parts.append(f"You see {self._format_item_list(items)}.")
 
         characters = room.get("characters", [])
         if characters:
