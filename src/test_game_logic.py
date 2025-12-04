@@ -49,6 +49,15 @@ class TestGameLogic(unittest.TestCase):
         self.assertFalse(self.game.check_condition({"var_eq": {"counter": 3}}))
         self.assertFalse(self.game.check_condition({"var_eq": {"missing_var": 1}}))
 
+    def test_check_condition_not(self):
+        """Test the 'not' condition."""
+        # Not empty (true) -> False
+        self.assertFalse(self.game.check_condition({"not": {}}))
+
+        # Not false condition -> True
+        self.assertFalse(self.game.check_condition({"has_item": "sword"}))
+        self.assertTrue(self.game.check_condition({"not": {"has_item": "sword"}}))
+
     def test_perform_action(self):
         """Test performing actions."""
         # Print action
@@ -104,23 +113,45 @@ class TestGameLogic(unittest.TestCase):
 
         # Condition not met
         self.game.game_state["active"] = False
-        msgs = self.game.process_events(obj, "touch")
+        msgs, blocked = self.game.process_events(obj, "touch")
         self.assertEqual(msgs, [])
+        self.assertFalse(blocked)
         self.assertFalse(self.game.game_state.get("touched"))
 
         # Condition met
         self.game.game_state["active"] = True
-        msgs = self.game.process_events(obj, "touch")
+        msgs, blocked = self.game.process_events(obj, "touch")
         self.assertEqual(msgs, ["Touched!"])
+        self.assertFalse(blocked)
         self.assertTrue(self.game.game_state["touched"])
 
         # Trigger not found
-        msgs = self.game.process_events(obj, "look")
+        msgs, blocked = self.game.process_events(obj, "look")
         self.assertEqual(msgs, [])
+        self.assertFalse(blocked)
 
         # No events key
-        msgs = self.game.process_events({}, "look")
+        msgs, blocked = self.game.process_events({}, "look")
         self.assertEqual(msgs, [])
+        self.assertFalse(blocked)
+
+    def test_process_events_block(self):
+        """Test blocking events."""
+        obj = {
+            "events": {
+                "go_north": [
+                    {
+                        "condition": {},
+                        "actions": [
+                            {"type": "block", "message": "Blocked!"}
+                        ]
+                    }
+                ]
+            }
+        }
+        msgs, blocked = self.game.process_events(obj, "go_north")
+        self.assertEqual(msgs, ["Blocked!"])
+        self.assertTrue(blocked)
 
     def test_location_description_variants(self):
         """Test different variants of location descriptions."""
@@ -191,7 +222,7 @@ class TestGameLogic(unittest.TestCase):
         self.assertIn("It seems to be watching you.", desc)
 
     def test_locked_door(self):
-        """Test the legacy locked door logic."""
+        """Test the legacy locked door logic (now implemented via events)."""
         # Move to hallway
         self.game.move_player("north")
         self.assertEqual(self.game.player_location, "hallway")
