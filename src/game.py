@@ -299,7 +299,10 @@ class Game:
                 return "\n".join(msgs)
 
             # Process generic exit events
-            generic_exit_msgs, _ = self.process_events(current_room, "exit")
+            generic_exit_msgs, blocked = self.process_events(current_room, "exit")
+
+            if blocked:
+                return "\n".join(msgs + generic_exit_msgs)
 
             # Combine generic exit messages with any non-blocking specific exit messages
             exit_msgs = msgs + generic_exit_msgs
