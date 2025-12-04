@@ -18,11 +18,15 @@ class Game:
 
         self.world_map = {
             "start": {
-                "description": "You are in a dimly lit room. There are doors to the north and east.",
+                "description": "You are in a dimly lit room. There are doors to the north, east, and northeast.",
                 "first_arrival_text": "You wake up in a strange, dimly lit room. Your head hurts.",
                 "transition_text": "You enter the dimly lit room.",
                 "examination_text": "The walls are bare concrete. The air smells musty.",
-                "exits": {"north": "hallway", "east": "kitchen"},
+                "exits": {
+                    "north": "hallway",
+                    "east": "kitchen",
+                    "northeast": "garden",
+                },
                 "items": [
                     {
                         "name": "key",
@@ -41,16 +45,30 @@ class Game:
                 "items": [],
             },
             "kitchen": {
-                "description": "You are in a kitchen. There is a door to the west.",
+                "description": "You are in a kitchen. There is a door to the west and a hatch to the cellar down below.",
                 "first_arrival_text": "You push open the door and reveal a messy kitchen.",
                 "examination_text": "Dirty dishes are piled high in the sink.",
-                "exits": {"west": "start"},
+                "exits": {"west": "start", "down": "cellar"},
                 "items": [
                     {
                         "name": "sword",
                         "description": "A sharp, shiny sword.",
                     }
                 ],
+            },
+            "garden": {
+                "description": "You are in a beautiful garden. There is a path leading southwest.",
+                "first_arrival_text": "You step out into the fresh air of a vibrant garden.",
+                "examination_text": "Flowers bloom in every color imaginable.",
+                "exits": {"southwest": "start"},
+                "items": [],
+            },
+            "cellar": {
+                "description": "You are in a dark, damp cellar. There is a ladder leading up.",
+                "first_arrival_text": "You climb down into the darkness.",
+                "examination_text": "It's too dark to see much.",
+                "exits": {"up": "kitchen"},
+                "items": [],
             },
             "treasure_room": {
                 "description": "You have found the treasure room!",
@@ -116,6 +134,12 @@ class Game:
                 item["name"] == "key" for item in self.inventory
             ):
                 return "The door is locked."
+
+            # Demonstrate blocked path for "garden" if user doesn't have the sword (just as an example)
+            if next_location == "garden" and not any(
+                item["name"] == "sword" for item in self.inventory
+            ):
+                return "Thick vines block the path to the garden. You need something to cut them."
 
             self.player_location = next_location
             self.visited_counts[next_location] += 1
