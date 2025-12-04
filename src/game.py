@@ -41,6 +41,13 @@ class Game:
                         "description": "A small, rusty key.",
                     }
                 ],
+                "characters": [
+                    {
+                        "name": "guard",
+                        "description": "A grumpy looking guard standing by the door.",
+                        "dialogue": "I'm watching you. Don't try anything funny.",
+                    }
+                ],
                 "events": {
                     "exit_northeast": [
                         {
@@ -276,6 +283,11 @@ class Game:
             item_names = [item["name"] for item in items]
             description_parts.append("You see a " + ", ".join(item_names) + ".")
 
+        characters = room.get("characters", [])
+        if characters:
+            char_names = [char["name"] for char in characters]
+            description_parts.append("You see " + ", ".join(char_names) + ".")
+
         return " ".join(description_parts)
 
     def move_player(self, direction):
@@ -413,7 +425,7 @@ class Game:
                     return desc + "\n" + "\n".join(msgs)
                 return desc
 
-        # Check current location
+        # Check current location items
         for item in self.world_map[self.player_location]["items"]:
             if item["name"] == item_name:
                 msgs, _ = self.process_events(item, "examine")
@@ -421,4 +433,38 @@ class Game:
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
                 return desc
+
+        # Check current location characters
+        room = self.world_map[self.player_location]
+        if "characters" in room:
+            for char in room["characters"]:
+                if char["name"] == item_name:
+                    msgs, _ = self.process_events(char, "examine")
+                    desc = char["description"]
+                    if msgs:
+                        return desc + "\n" + "\n".join(msgs)
+                    return desc
+
         return f"You don't see a {item_name} here."
+
+    def talk_to_character(self, character_name):
+        """Talks to a character in the current location.
+
+        Args:
+            character_name: The name of the character to talk to.
+
+        Returns:
+            str: The character's dialogue, or a message if the character is not found.
+        """
+        room = self.world_map[self.player_location]
+        if "characters" in room:
+            for char in room["characters"]:
+                if char["name"] == character_name:
+                    # You could add event processing here too if needed (e.g. "talk" trigger)
+                    msgs, _ = self.process_events(char, "talk")
+                    dialogue = char.get("dialogue", "They have nothing to say.")
+                    if msgs:
+                         return dialogue + "\n" + "\n".join(msgs)
+                    return f'{char["name"]} says: "{dialogue}"'
+
+        return f"There is no one named {character_name} here."
