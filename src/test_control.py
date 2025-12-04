@@ -13,13 +13,28 @@ class TestControl(unittest.TestCase):
     """Test cases for the Control class."""
 
     def setUp(self):
-        """Set up a new Control instance before each test."""
+        """Set up a new Control instance before each test.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.control = Control()
 
     @patch("builtins.input")
     @patch("builtins.print")
     def test_quit_command(self, mock_print, mock_input):
-        """Test the 'quit' command."""
+        """Test the 'quit' command.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = ["quit"]
         self.control.main_game_loop()
         self.assertTrue(self.control.done)
@@ -30,7 +45,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_movement_commands(self, mock_print, mock_input):
-        """Test movement commands and their aliases."""
+        """Test movement commands and their aliases.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         # 'n' for north, 'go east' for east
         mock_input.side_effect = ["n", "go east", "quit"]
         self.control.main_game_loop()
@@ -48,7 +71,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_look_command(self, mock_print, mock_input):
-        """Test the 'look' command."""
+        """Test the 'look' command.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = ["look", "quit"]
         self.control.main_game_loop()
 
@@ -59,7 +90,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_inventory_commands(self, mock_print, mock_input):
-        """Test 'take', 'drop', and 'inventory' commands."""
+        """Test 'take', 'drop', and 'inventory' commands.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = [
             "inventory",        # Empty
             "take key",         # Take existing item
@@ -83,7 +122,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_examine_command(self, mock_print, mock_input):
-        """Test the 'examine' command."""
+        """Test the 'examine' command.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = [
             "examine key",      # Examine item in room
             "examine room",     # Examine room
@@ -100,7 +147,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_incomplete_commands(self, mock_print, mock_input):
-        """Test commands without required arguments."""
+        """Test commands without required arguments.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = [
             "go",
             "take",
@@ -119,7 +174,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_unknown_command(self, mock_print, mock_input):
-        """Test unknown command."""
+        """Test unknown command.
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = ["xyzzy", "quit"]
         self.control.main_game_loop()
 
@@ -129,7 +192,15 @@ class TestControl(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_empty_input(self, mock_print, mock_input):
-        """Test empty input (just pressing enter)."""
+        """Test empty input (just pressing enter).
+
+        Args:
+            mock_print: Mock for print function.
+            mock_input: Mock for input function.
+
+        Returns:
+            None
+        """
         mock_input.side_effect = ["", "quit"]
         self.control.main_game_loop()
         # Should just loop again without crashing

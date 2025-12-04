@@ -55,6 +55,34 @@ Run the main script to start the game:
 python main.py
 ```
 
+### Building with CMake
+
+This project uses CMake to build executables and packages for distribution.
+
+1.  **Create a build directory:**
+    ```bash
+    mkdir build
+    cd build
+    ```
+
+2.  **Configure the project:**
+    ```bash
+    cmake ..
+    ```
+
+3.  **Run the game from the build directory:**
+    ```bash
+    make run
+    ```
+
+4.  **Create distributable packages:**
+    *   **Windows:** `make build_exe` (Creates a `.exe` installer)
+    *   **macOS:** `make build_dmg` (Creates a `.dmg` disk image)
+    *   **Linux:**
+        *   `make build_appimage` (Creates an AppImage)
+        *   `make build_snap` (Creates a Snap package)
+        *   `make build_flatpak` (Creates a Flatpak)
+
 ## Development
 
 ### Project Structure
@@ -62,15 +90,19 @@ python main.py
 ```
 .
 ├── src/
-│   ├── __init__.py      # Package initialization
-│   ├── control.py       # Main control loop and input handling
-│   ├── game.py          # Game logic, state, and world definition
-│   ├── settings.py      # Configuration constants
-│   ├── test_game.py     # Unit tests for game logic
-│   └── test_movement.py # Unit tests for movement system
-├── main.py              # Application entry point
-├── requirements.txt     # Python dependencies
-└── README.md            # Project documentation
+│   ├── __init__.py                # Package initialization
+│   ├── control.py                 # Main control loop and input handling
+│   ├── game.py                    # Game logic, state, and world definition
+│   ├── test_control.py            # Unit tests for the Control class
+│   ├── test_coverage_improvements.py # Additional tests for coverage
+│   ├── test_game.py               # Unit tests for the Game class
+│   ├── test_game_logic.py         # Unit tests for game logic and events
+│   ├── test_movement.py           # Unit tests for movement system
+│   └── test_remaining_coverage.py # Remaining coverage tests
+├── CMakeLists.txt                 # CMake build configuration
+├── main.py                        # Application entry point
+├── requirements.txt               # Python dependencies
+└── README.md                      # Project documentation
 ```
 
 ### Running Tests

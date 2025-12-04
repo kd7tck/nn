@@ -15,6 +15,12 @@ class TestGame(unittest.TestCase):
         """Set up a new Game instance before each test.
 
         This ensures that each test starts with a fresh game state.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.game = Game()
 
@@ -23,6 +29,12 @@ class TestGame(unittest.TestCase):
 
         Verifies that an item can be taken from the room and added to the
         player's inventory.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.assertEqual(
             self.game.take_item("key"), "You take the key."
@@ -35,6 +47,12 @@ class TestGame(unittest.TestCase):
 
         Verifies that an item can be dropped from the inventory back into
         the room.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.game.take_item("key")
         self.assertEqual(
@@ -46,6 +64,12 @@ class TestGame(unittest.TestCase):
         """Test examining an item in the room.
 
         Verifies that an item in the current location can be examined.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.assertEqual(
             self.game.examine_item("key"), "A small, rusty key."
@@ -55,6 +79,12 @@ class TestGame(unittest.TestCase):
         """Test examining an item in the inventory.
 
         Verifies that an item in the player's inventory can be examined.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.game.take_item("key")
         self.assertEqual(
@@ -66,6 +96,12 @@ class TestGame(unittest.TestCase):
 
         Verifies that the get_inventory method returns a string ending with
         a period, regardless of whether the inventory is empty or contains items.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Case 1: Empty inventory
         self.assertEqual(self.game.get_inventory(), "Your inventory is empty.")

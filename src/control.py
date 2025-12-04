@@ -17,6 +17,12 @@ class Control:
         """Initializes the Control class.
 
         Sets up the game instance, the 'done' flag, and the direction mappings.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.done = False
         self.game = Game()
@@ -48,6 +54,9 @@ class Control:
 
         This loop runs until the `done` attribute is set to True. It handles
         user input and prints output to the console.
+
+        Args:
+            None
 
         Returns:
             None

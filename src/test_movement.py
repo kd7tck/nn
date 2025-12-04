@@ -15,6 +15,12 @@ class TestExpandedMovement(unittest.TestCase):
         """Set up a new Game instance before each test.
 
         This ensures that each test starts with a fresh game state.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.game = Game()
         self.control = Control()
@@ -24,6 +30,12 @@ class TestExpandedMovement(unittest.TestCase):
 
         Verifies that moving to the garden is blocked if the player does
         not have the sword.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Start location is "start"
         # "garden" is northeast, but blocked by vines if no sword
@@ -36,6 +48,12 @@ class TestExpandedMovement(unittest.TestCase):
 
         Verifies that moving to the garden is allowed if the player has
         the sword.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Give player the sword
         self.game.inventory.append({"name": "sword", "description": "A sharp, shiny sword."})
@@ -49,6 +67,12 @@ class TestExpandedMovement(unittest.TestCase):
 
         Verifies that the player can move up and down between rooms (e.g.,
         kitchen and cellar).
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Move to kitchen first
         self.game.move_player("east")
@@ -69,6 +93,12 @@ class TestExpandedMovement(unittest.TestCase):
 
         Verifies that short direction codes (e.g., 'n', 'u') map to the
         correct full direction names.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # We can't easily test the full loop without mocking input,
         # but we can test if the directions map is correct.
@@ -82,6 +112,12 @@ class TestExpandedMovement(unittest.TestCase):
 
         Verifies that attempting to move in a direction with no exit
         returns the appropriate message.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         result = self.game.move_player("northwest") # No exit northwest from start
         self.assertEqual(result, "You can't go that way.")

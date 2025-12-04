@@ -11,6 +11,9 @@ def main():
 
     This function creates a Control instance and starts the main game loop.
 
+    Args:
+        None
+
     Returns:
         None
     """
