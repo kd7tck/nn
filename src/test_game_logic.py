@@ -162,7 +162,7 @@ class TestGameLogic(unittest.TestCase):
         # Arrival = False
         desc = self.game.get_location_description(arrival=False)
         self.assertIn(room["description"], desc)
-        self.assertIn("You see a key, rock.", desc)
+        self.assertIn("You see a key and a rock.", desc)
 
         # Arrival = True, First visit (count=1)
         self.game.visited_counts["start"] = 1
