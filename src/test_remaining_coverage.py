@@ -347,12 +347,9 @@ class TestRemainingCoverage(unittest.TestCase):
             with patch('builtins.input', side_effect=["talk", "talk to", "quit"]):
                 self.control.main_game_loop()
             self.assertTrue(any("Talk to whom?" in str(c) for c in mock_print.mock_calls))
-            # "talk to" falls into "talk to <char>" logic but fails if len <= 2?
-            # command is "talk", user_input is ["talk", "to"].
-            # if user_input[1] == "to" and len > 2: ... else ...
-            # so if "talk to", it goes to else -> char_name="to".
-            # It should print "There is no one named to here."
-            self.assertTrue(any("no one named to" in str(c) for c in mock_print.mock_calls))
+            # command "talk to" should now prompt "Talk to whom?" instead of "There is no one named to here."
+            # We verified "Talk to whom?" above.
+            self.assertFalse(any("no one named to" in str(c) for c in mock_print.mock_calls))
 
     def test_get_dialogue_text_inactive(self):
         """Test _get_dialogue_text when dialogue is not active."""

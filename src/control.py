@@ -108,11 +108,15 @@ class Control:
             elif command == "talk":
                 if len(user_input) > 1:
                     # check for "talk to <name>"
-                    if user_input[1] == "to" and len(user_input) > 2:
-                         char_name = " ".join(user_input[2:])
+                    if user_input[1] == "to":
+                        if len(user_input) > 2:
+                            char_name = " ".join(user_input[2:])
+                            print(self.game.talk_to_character(char_name))
+                        else:
+                            print("Talk to whom?")
                     else:
-                         char_name = " ".join(user_input[1:])
-                    print(self.game.talk_to_character(char_name))
+                        char_name = " ".join(user_input[1:])
+                        print(self.game.talk_to_character(char_name))
                 else:
                     print("Talk to whom?")
             else:
