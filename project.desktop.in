@@ -2,8 +2,7 @@
 Version=1.0
 Type=Application
 Name=${PROJECT_NAME}
-Comment=A template for Pygame projects
-Exec=${PYTHON_EXECUTABLE} @CMAKE_INSTALL_PREFIX@/bin/main.py
-Icon=@CMAKE_INSTALL_PREFIX@/bin/assets/sprites/player.png
+Comment=A template for text-based games
+Exec=@CMAKE_INSTALL_PREFIX@/bin/run_game_linux.sh
 Categories=Game;
-Terminal=false
+Terminal=true

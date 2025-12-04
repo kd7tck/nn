@@ -1,87 +1,99 @@
 """The main control loop for the game.
 
-This module contains the Control class, which manages the game's state machine,
-event loop, and main game loop.
+This module contains the Control class, which manages the game's main loop,
+processing user input and interacting with the Game instance.
 """
-import pygame as pg
-from .states import menu
-from .states import game as gameplay
-from . import settings
-from .sound import sound_manager
+from src.game import Game
 
 
 class Control:
-    """Manages the game's state machine and main loop."""
+    """Manages the game's main loop.
+
+    This class interprets user commands, calls the appropriate methods on the
+    Game object, and displays the results to the user.
+    """
 
     def __init__(self):
         """Initializes the Control class.
 
-        This method sets up the Pygame window, clock, and state machine.
+        Sets up the game instance, the 'done' flag, and the direction mappings.
         """
-        pg.init()
-        self.screen = pg.display.set_mode((settings.WIDTH, settings.HEIGHT))
-        self.screen_rect = self.screen.get_rect()
-        self.clock = pg.time.Clock()
         self.done = False
-        self.fps = settings.FPS
-        self.debug_mode = False
-        sound_manager.load_sound("click", "assets/sounds/click.wav")
-        sound_manager.load_music("assets/music/menu.ogg")
-        sound_manager.play_music()
-        self.state_dict = {
-            "MENU": menu.Menu(),
-            "GAME": gameplay.Game()
+        self.game = Game()
+        self.directions = {
+            "n": "north",
+            "north": "north",
+            "s": "south",
+            "south": "south",
+            "e": "east",
+            "east": "east",
+            "w": "west",
+            "west": "west",
+            "ne": "northeast",
+            "northeast": "northeast",
+            "nw": "northwest",
+            "northwest": "northwest",
+            "se": "southeast",
+            "southeast": "southeast",
+            "sw": "southwest",
+            "southwest": "southwest",
+            "u": "up",
+            "up": "up",
+            "d": "down",
+            "down": "down",
         }
-        self.state_name = "MENU"
-        self.state = self.state_dict[self.state_name]
-        self.state.startup({})
-
-    def event_loop(self):
-        """Handles all events from the Pygame event queue."""
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                self.done = True
-            elif event.type == pg.KEYUP:
-                if event.key == pg.K_F3:
-                    self.debug_mode = not self.debug_mode
-            self.state.get_event(event)
 
     def main_game_loop(self):
         """The main game loop.
 
         This loop runs until the `done` attribute is set to True. It handles
-        updating the game state, drawing to the screen, and managing the
-        frame rate.
+        user input and prints output to the console.
+
+        Returns:
+            None
         """
+        print("Welcome to TextGameTemplate!")
+        print(self.game.get_location_description(arrival=True))
         while not self.done:
-            delta_time = self.clock.tick(self.fps) / 1000.0
-            self.event_loop()
-            self.update(delta_time)
-            self.draw()
-            pg.display.update()
-
-    def update(self, dt):
-        """Updates the current game state.
-
-        Args:
-            dt (float): The time in seconds since the last frame.
-        """
-        if self.state.quit:
-            self.done = True
-            return
-        self.state.update(dt)
-        if self.state.done:
-            self.flip_state()
-
-    def draw(self):
-        """Draws the current game state to the screen."""
-        self.state.draw(self.screen, self.debug_mode)
-
-    def flip_state(self):
-        """Switches to the next game state."""
-        previous, self.state_name = self.state_name, self.state.next_state
-        persist = self.state.persist
-        if self.state_name == "GAME":
-            persist["clock"] = self.clock
-        self.state = self.state_dict[self.state_name]
-        self.state.startup(persist)
+            user_input = input("> ").lower().split()
+            if not user_input:
+                continue
+            command = user_input[0]
+            if command == "quit":
+                self.done = True
+            elif command in self.directions:
+                direction = self.directions[command]
+                print(self.game.move_player(direction))
+            elif command == "go":
+                if len(user_input) > 1:
+                    direction = user_input[1]
+                    if direction in self.directions:
+                        direction = self.directions[direction]
+                    print(self.game.move_player(direction))
+                else:
+                    print("Go where?")
+            elif command == "look":
+                print(self.game.get_location_description())
+            elif command == "take":
+                if len(user_input) > 1:
+                    item = user_input[1]
+                    print(self.game.take_item(item))
+                else:
+                    print("Take what?")
+            elif command == "drop":
+                if len(user_input) > 1:
+                    item = user_input[1]
+                    print(self.game.drop_item(item))
+                else:
+                    print("Drop what?")
+            elif command == "inventory":
+                print(self.game.get_inventory())
+            elif command == "examine":
+                if len(user_input) > 1:
+                    item_name = user_input[1]
+                    print(self.game.examine_item(item_name))
+                else:
+                    print("Examine what?")
+            else:
+                print("Unknown command.")
+        print("Thanks for playing!")
