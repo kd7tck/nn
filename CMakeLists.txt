@@ -54,11 +54,11 @@ add_custom_target(clean_all
 # --- Installation ---
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    install(DIRECTORY src DESTINATION bin)
+    install(DIRECTORY src DESTINATION share/${PROJECT_NAME})
 endif()
 
 if(EXISTS "${MAIN_SCRIPT}")
-    install(FILES main.py DESTINATION bin)
+    install(FILES main.py DESTINATION share/${PROJECT_NAME})
 endif()
 
 # --- Platform Specific Builds ---
@@ -169,9 +169,7 @@ elseif(UNIX AND NOT APPLE)
         FILES "${CMAKE_BINARY_DIR}/run_game_linux.sh"
         DESTINATION bin
         PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
-    )
-    install(
-        CODE "execute_process(COMMAND ln -sf ${CMAKE_INSTALL_PREFIX}/bin/run_game_linux.sh /usr/local/bin/${PROJECT_NAME})"
+        RENAME "${PROJECT_NAME}"
     )
     message(STATUS "To create a desktop shortcut, find '${PROJECT_NAME}' in your application menu and drag it to your desktop.")
 

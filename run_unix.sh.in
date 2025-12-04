@@ -1,2 +1,2 @@
 #!/bin/bash
-exec "${PYTHON_EXECUTABLE}" "@CMAKE_INSTALL_PREFIX@/bin/main.py"
+exec "${PYTHON_EXECUTABLE}" "@CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/main.py"
