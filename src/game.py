@@ -721,6 +721,17 @@ class Game:
                     return desc + "\n" + "\n".join(msgs)
                 return desc
 
+        # Check inside open containers in inventory
+        for item in self.inventory:
+            if item.get("is_container") and item.get("is_open"):
+                for content in item.get("contents", []):
+                    if self._name_matches(content["name"], item_name):
+                        msgs, _ = self.process_events(content, "examine")
+                        desc = content["description"]
+                        if msgs:
+                            return desc + "\n" + "\n".join(msgs)
+                        return desc
+
         # Check current location items
         for item in self.world_map[self.player_location]["items"]:
             if self._name_matches(item["name"], item_name):
@@ -738,6 +749,17 @@ class Game:
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
                 return desc
+
+        # Check inside open containers in location
+        for item in self.world_map[self.player_location]["items"]:
+            if item.get("is_container") and item.get("is_open"):
+                for content in item.get("contents", []):
+                    if self._name_matches(content["name"], item_name):
+                        msgs, _ = self.process_events(content, "examine")
+                        desc = content["description"]
+                        if msgs:
+                            return desc + "\n" + "\n".join(msgs)
+                        return desc
 
         # Check current location characters
         room = self.world_map[self.player_location]
