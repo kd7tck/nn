@@ -1,0 +1,25 @@
+{
+    "id": "hallway",
+    "description": "You are in a long hallway. There are doors to the south and north.",
+    "transition_text": "You step into the long hallway.",
+    "examination_text": "The hallway seems to stretch on forever.",
+    "nth_arrival_text": {
+        "2": "You find yourself back in the long hallway."
+    },
+    "exits": {"south": "start", "north": "treasure_room"},
+    "events": {
+        "exit_north": [
+            {
+                "condition": {
+                    "not": {"has_item": "key"}
+                },
+                "actions": [
+                    {
+                        "type": "block",
+                        "message": "The door is locked."
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "id": "treasure_room",
+    "description": "You have found the treasure room!",
+    "first_arrival_text": "At last! You have discovered the legendary treasure room.",
+    "examination_text": "Gold glitters from every corner.",
+    "exits": {"south": "hallway"},
+    "items": ["treasure"]
+}

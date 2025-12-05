@@ -1,0 +1,7 @@
+{
+    "id": "cellar",
+    "description": "You are in a dark, damp cellar. There is a ladder leading up.",
+    "first_arrival_text": "You climb down into the darkness.",
+    "examination_text": "It's too dark to see much.",
+    "exits": {"up": "kitchen"}
+}
