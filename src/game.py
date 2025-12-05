@@ -3,6 +3,7 @@
 This module contains the Game class, which manages the game's state,
 including the player's location, inventory, and the world map.
 """
+import json
 from collections import defaultdict
 
 
@@ -35,6 +36,57 @@ class Game:
         self.current_dialogue_node_id = None
         self.current_character_name = None
 
+        self._init_world_map()
+
+    def save_game(self, filename):
+        """Saves the current game state to a file.
+
+        Args:
+            filename: The name of the file to save to.
+
+        Returns:
+            str: A message indicating the result of the save operation.
+        """
+        try:
+            data = {
+                "player_location": self.player_location,
+                "inventory": self.inventory,
+                "visited_counts": dict(self.visited_counts),
+                "game_state": self.game_state,
+                "world_map": self.world_map
+            }
+            with open(filename, 'w') as f:
+                json.dump(data, f, indent=4)
+            return f"Game saved to {filename}."
+        except Exception as e:
+            return f"Error saving game: {e}"
+
+    def load_game(self, filename):
+        """Loads a game state from a file.
+
+        Args:
+            filename: The name of the file to load from.
+
+        Returns:
+            str: A message indicating the result of the load operation.
+        """
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+
+            self.player_location = data["player_location"]
+            self.inventory = data["inventory"]
+            self.visited_counts = defaultdict(int, data["visited_counts"])
+            self.game_state = data["game_state"]
+            self.world_map = data["world_map"]
+
+            return f"Game loaded from {filename}."
+        except FileNotFoundError:
+            return f"Save file {filename} not found."
+        except Exception as e:
+            return f"Error loading game: {e}"
+
+    def _init_world_map(self):
         self.world_map = {
             "start": {
                 "description": "You are in a dimly lit room. There are doors to the north, east, and northeast.",
@@ -396,7 +448,7 @@ class Game:
             return "You can't go that way."
 
     def take_item(self, item_name):
-        """Takes an item from the current location and adds it to the player's inventory.
+        """Takes an item from the current location or a container and adds it to the player's inventory.
 
         Args:
             item_name: The name of the item to take.
@@ -404,22 +456,175 @@ class Game:
         Returns:
             str: A message indicating whether the item was successfully taken or not.
         """
+        # 1. Check direct location items
         location_items = self.world_map[self.player_location]["items"]
         for item in location_items:
             if item["name"] == item_name:
                 msgs, blocked = self.process_events(item, "take")
-
                 if blocked:
                      return "\n".join(msgs)
 
                 location_items.remove(item)
                 self.inventory.append(item)
-
                 output_msgs = [f"You take the {item_name}."]
                 output_msgs.extend(msgs)
-
                 return "\n".join(output_msgs)
+
+        # 2. Check inside open containers in location
+        for item in location_items:
+            if item.get("is_container") and item.get("is_open"):
+                for content in item.get("contents", []):
+                    if content["name"] == item_name:
+                        msgs, blocked = self.process_events(content, "take")
+                        if blocked:
+                             return "\n".join(msgs)
+
+                        item["contents"].remove(content)
+                        self.inventory.append(content)
+                        output_msgs = [f"You take the {item_name} from the {item['name']}."]
+                        output_msgs.extend(msgs)
+                        return "\n".join(output_msgs)
+
+        # 3. Check inside open containers in inventory
+        for item in self.inventory:
+             if item.get("is_container") and item.get("is_open"):
+                for content in item.get("contents", []):
+                    if content["name"] == item_name:
+                        msgs, blocked = self.process_events(content, "take")
+                        if blocked:
+                             return "\n".join(msgs)
+
+                        item["contents"].remove(content)
+                        self.inventory.append(content)
+                        output_msgs = [f"You take the {item_name} from the {item['name']}."]
+                        output_msgs.extend(msgs)
+                        return "\n".join(output_msgs)
+
         return f"There is no {item_name} here."
+
+    def put_item(self, item_name, container_name):
+        """Puts an item from inventory into a container (in inventory or room).
+
+        Args:
+            item_name: The name of the item to put.
+            container_name: The name of the container.
+
+        Returns:
+            str: Result message.
+        """
+        # Find item in inventory
+        item_to_put = None
+        for item in self.inventory:
+            if item["name"] == item_name:
+                item_to_put = item
+                break
+
+        if not item_to_put:
+            return f"You don't have a {item_name}."
+
+        # Find container
+        target_container = None
+
+        # Check inventory for container
+        for item in self.inventory:
+            if item["name"] == container_name:
+                target_container = item
+                break
+
+        # Check room for container
+        if not target_container:
+            for item in self.world_map[self.player_location]["items"]:
+                if item["name"] == container_name:
+                    target_container = item
+                    break
+
+        if not target_container:
+            return f"You don't see a {container_name} here."
+
+        if not target_container.get("is_container"):
+            return f"The {container_name} is not a container."
+
+        if not target_container.get("is_open"):
+            return f"The {container_name} is closed."
+
+        # Move item
+        self.inventory.remove(item_to_put)
+        if "contents" not in target_container:
+            target_container["contents"] = []
+        target_container["contents"].append(item_to_put)
+
+        return f"You put the {item_name} in the {container_name}."
+
+    def open_item(self, item_name):
+        """Opens a container.
+
+        Args:
+            item_name: Name of the item to open.
+
+        Returns:
+            str: Result message.
+        """
+        target = None
+        # Check inventory
+        for item in self.inventory:
+            if item["name"] == item_name:
+                target = item
+                break
+        # Check room
+        if not target:
+            for item in self.world_map[self.player_location]["items"]:
+                if item["name"] == item_name:
+                    target = item
+                    break
+
+        if not target:
+            return f"You don't see a {item_name} here."
+
+        if not target.get("is_container"):
+            return f"You can't open that."
+
+        if target.get("is_locked"):
+             return f"The {item_name} is locked."
+
+        if target.get("is_open"):
+            return f"The {item_name} is already open."
+
+        target["is_open"] = True
+        return f"You open the {item_name}."
+
+    def close_item(self, item_name):
+        """Closes a container.
+
+        Args:
+            item_name: Name of the item to close.
+
+        Returns:
+            str: Result message.
+        """
+        target = None
+        # Check inventory
+        for item in self.inventory:
+            if item["name"] == item_name:
+                target = item
+                break
+        # Check room
+        if not target:
+            for item in self.world_map[self.player_location]["items"]:
+                if item["name"] == item_name:
+                    target = item
+                    break
+
+        if not target:
+            return f"You don't see a {item_name} here."
+
+        if not target.get("is_container"):
+            return f"You can't close that."
+
+        if not target.get("is_open"):
+            return f"The {item_name} is already closed."
+
+        target["is_open"] = False
+        return f"You close the {item_name}."
 
     def drop_item(self, item_name):
         """Drops an item from the player's inventory into the current location.
@@ -483,6 +688,15 @@ class Game:
             if item["name"] == item_name:
                 msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
+                if item.get("is_container") and item.get("is_open"):
+                    contents = item.get("contents", [])
+                    if contents:
+                        desc += f" It contains: {self._format_item_list(contents)}."
+                    else:
+                        desc += " It is empty."
+                elif item.get("is_container") and not item.get("is_open"):
+                    desc += " It is closed."
+
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
                 return desc
@@ -492,6 +706,15 @@ class Game:
             if item["name"] == item_name:
                 msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
+                if item.get("is_container") and item.get("is_open"):
+                    contents = item.get("contents", [])
+                    if contents:
+                        desc += f" It contains: {self._format_item_list(contents)}."
+                    else:
+                        desc += " It is empty."
+                elif item.get("is_container") and not item.get("is_open"):
+                    desc += " It is closed."
+
                 if msgs:
                     return desc + "\n" + "\n".join(msgs)
                 return desc

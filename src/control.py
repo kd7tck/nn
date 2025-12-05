@@ -48,6 +48,27 @@ class Control:
             "d": "down",
             "down": "down",
         }
+        self.aliases = {
+            "l": "look",
+            "i": "inventory",
+            "inv": "inventory",
+            "x": "examine",
+            "ex": "examine",
+            "get": "take",
+            "g": "take",
+        }
+
+    def _filter_input(self, user_input):
+        """Filters the user input by removing stop words.
+
+        Args:
+            user_input: A list of words from the user input.
+
+        Returns:
+            list: A list of filtered words.
+        """
+        stop_words = ["a", "an", "the"]
+        return [word for word in user_input if word not in stop_words]
 
     def main_game_loop(self):
         """The main game loop.
@@ -64,21 +85,29 @@ class Control:
         print("Welcome to TextGameTemplate!")
         print(self.game.get_location_description(arrival=True))
         while not self.done:
-            user_input = input("> ").lower().split()
-            if not user_input:
+            raw_input = input("> ").lower().split()
+            if not raw_input:
                 continue
 
             if self.game.dialogue_active:
-                if user_input[0] in ["quit", "exit", "bye"]:
+                if raw_input[0] in ["quit", "exit", "bye"]:
                     self.game.end_dialogue()
                     print("You stop talking.")
-                elif user_input[0].isdigit():
-                    print(self.game.make_dialogue_choice(int(user_input[0])))
+                elif raw_input[0].isdigit():
+                    print(self.game.make_dialogue_choice(int(raw_input[0])))
                 else:
                     print("Please enter the number of your choice, or 'quit' to end the conversation.")
                 continue
 
+            # Filter input for normal commands
+            user_input = self._filter_input(raw_input)
+            if not user_input:
+                continue
+
             command = user_input[0]
+            if command in self.aliases:
+                command = self.aliases[command]
+
             if command == "quit":
                 self.done = True
             elif command in self.directions:
@@ -117,6 +146,7 @@ class Control:
             elif command == "talk":
                 if len(user_input) > 1:
                     # check for "talk to <name>"
+                    # But we filtered "to" ? Wait, "to" is not in stop words ["a", "an", "the"]
                     if user_input[1] == "to":
                         if len(user_input) > 2:
                             char_name = " ".join(user_input[2:])
@@ -128,6 +158,43 @@ class Control:
                         print(self.game.talk_to_character(char_name))
                 else:
                     print("Talk to whom?")
+            elif command == "save":
+                if len(user_input) > 1:
+                    filename = user_input[1]
+                    print(self.game.save_game(filename))
+                else:
+                    print("Save to which file?")
+            elif command == "load":
+                if len(user_input) > 1:
+                    filename = user_input[1]
+                    print(self.game.load_game(filename))
+                else:
+                    print("Load from which file?")
+            elif command == "open":
+                if len(user_input) > 1:
+                    item = " ".join(user_input[1:])
+                    print(self.game.open_item(item))
+                else:
+                    print("Open what?")
+            elif command == "close":
+                if len(user_input) > 1:
+                    item = " ".join(user_input[1:])
+                    print(self.game.close_item(item))
+                else:
+                    print("Close what?")
+            elif command == "put":
+                # put item in container
+                # Need to find "in"
+                if "in" in user_input:
+                    idx = user_input.index("in")
+                    item = " ".join(user_input[1:idx])
+                    container = " ".join(user_input[idx+1:])
+                    if item and container:
+                        print(self.game.put_item(item, container))
+                    else:
+                        print("Put what in what?")
+                else:
+                     print("Usage: put <item> in <container>")
             else:
                 print("Unknown command.")
         print("Thanks for playing!")
