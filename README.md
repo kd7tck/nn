@@ -17,6 +17,14 @@ Once the game is running, you can interact with the world using simple text comm
     *   Example: `drop key`
 *   **Examine:** Look closer at an item or the room using `examine <item_name>`.
     *   Examples: `examine key`, `examine room`
+*   **Talk:** Interact with characters in the game.
+    *   Example: `talk guard`, `talk to guard`
+*   **Container Interaction:**
+    *   **Open/Close:** `open box`, `close chest`
+    *   **Put:** `put key in box`
+*   **Save/Load:**
+    *   **Save:** Type `save` to save your current progress.
+    *   **Load:** Type `load` to restore a saved game.
 *   **Quit:** Type `quit` to exit the game.
 
 ## Features
@@ -24,6 +32,10 @@ Once the game is running, you can interact with the world using simple text comm
 *   **Command Parser:** A robust command parser that understands standard adventure game commands and abbreviations.
 *   **World Model:** A graph-based world model where rooms are connected by directions.
 *   **Inventory System:** Collect, drop, and examine items.
+*   **Nested Containers:** Items can be placed inside other items (containers), which can be opened, closed, and locked.
+*   **Interactive Characters:** A dialogue system that allows for conversation trees with NPCs.
+*   **Event System:** A flexible event system that handles conditional logic, allowing for puzzles and dynamic world changes.
+*   **Save/Load System:** Persist game state across sessions.
 *   **Dynamic Descriptions:** Room descriptions can change based on player visits or other state.
 *   **Cross-Platform Build System:** Includes a CMake build system for creating distributable packages for Windows, macOS, and Linux.
 
@@ -90,19 +102,17 @@ This project uses CMake to build executables and packages for distribution.
 ```
 .
 ├── src/
-│   ├── __init__.py                # Package initialization
-│   ├── control.py                 # Main control loop and input handling
-│   ├── game.py                    # Game logic, state, and world definition
-│   ├── test_control.py            # Unit tests for the Control class
-│   ├── test_coverage_improvements.py # Additional tests for coverage
-│   ├── test_game.py               # Unit tests for the Game class
-│   ├── test_game_logic.py         # Unit tests for game logic and events
-│   ├── test_movement.py           # Unit tests for movement system
-│   └── test_remaining_coverage.py # Remaining coverage tests
-├── CMakeLists.txt                 # CMake build configuration
-├── main.py                        # Application entry point
-├── requirements.txt               # Python dependencies
-└── README.md                      # Project documentation
+│   ├── data/                  # Game data (rooms, items, characters)
+│   ├── __init__.py            # Package initialization
+│   ├── control.py             # Main control loop and input handling
+│   ├── game.py                # Game logic, state, and world definition
+│   ├── loader.py              # Data loading and processing
+│   ├── test_all.py            # Main unit test suite
+│   └── test_examine_recursive.py # Specific tests for recursive examination
+├── CMakeLists.txt             # CMake build configuration
+├── main.py                    # Application entry point
+├── requirements.txt           # Python dependencies
+└── README.md                  # Project documentation
 ```
 
 ### Running Tests
