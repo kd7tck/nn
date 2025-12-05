@@ -1,0 +1,7 @@
+{
+    "id": "garden",
+    "description": "You are in a beautiful garden. There is a path leading southwest.",
+    "first_arrival_text": "You step out into the fresh air of a vibrant garden.",
+    "examination_text": "Flowers bloom in every color imaginable.",
+    "exits": {"southwest": "start"}
+}

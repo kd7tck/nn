@@ -1,0 +1,29 @@
+{
+    "id": "start",
+    "description": "You are in a dimly lit room. There are doors to the north, east, and northeast.",
+    "first_arrival_text": "You wake up in a strange, dimly lit room. Your head hurts.",
+    "transition_text": "You enter the dimly lit room.",
+    "examination_text": "The walls are bare concrete. The air smells musty.",
+    "exits": {
+        "north": "hallway",
+        "east": "kitchen",
+        "northeast": "garden"
+    },
+    "items": ["key"],
+    "characters": ["guard"],
+    "events": {
+        "exit_northeast": [
+            {
+                "condition": {
+                    "not": {"has_item": "sword"}
+                },
+                "actions": [
+                    {
+                        "type": "block",
+                        "message": "Thick vines block the path to the garden. You need something to cut them."
+                    }
+                ]
+            }
+        ]
+    }
+}

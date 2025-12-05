@@ -5,6 +5,7 @@ including the player's location, inventory, and the world map.
 """
 import json
 from collections import defaultdict
+from src.loader import load_world_data
 
 
 class Game:
@@ -107,123 +108,7 @@ class Game:
         return False
 
     def _init_world_map(self):
-        self.world_map = {
-            "start": {
-                "description": "You are in a dimly lit room. There are doors to the north, east, and northeast.",
-                "first_arrival_text": "You wake up in a strange, dimly lit room. Your head hurts.",
-                "transition_text": "You enter the dimly lit room.",
-                "examination_text": "The walls are bare concrete. The air smells musty.",
-                "exits": {
-                    "north": "hallway",
-                    "east": "kitchen",
-                    "northeast": "garden",
-                },
-                "items": [
-                    {
-                        "name": "key",
-                        "description": "A small, rusty key.",
-                    }
-                ],
-                "characters": [
-                    {
-                        "name": "guard",
-                        "description": "A grumpy looking guard standing by the door.",
-                        "dialogue": "I'm watching you. Don't try anything funny.",
-                    }
-                ],
-                "events": {
-                    "exit_northeast": [
-                        {
-                            "condition": {
-                                "not": {"has_item": "sword"}
-                            },
-                            "actions": [
-                                {
-                                    "type": "block",
-                                    "message": "Thick vines block the path to the garden. You need something to cut them."
-                                }
-                            ]
-                        }
-                    ]
-                }
-            },
-            "hallway": {
-                "description": "You are in a long hallway. There are doors to the south and north.",
-                "transition_text": "You step into the long hallway.",
-                "examination_text": "The hallway seems to stretch on forever.",
-                "nth_arrival_text": {
-                    2: "You find yourself back in the long hallway."
-                },
-                "exits": {"south": "start", "north": "treasure_room"},
-                "items": [],
-                "events": {
-                    "exit_north": [
-                        {
-                            "condition": {
-                                "not": {"has_item": "key"}
-                            },
-                            "actions": [
-                                {
-                                    "type": "block",
-                                    "message": "The door is locked."
-                                }
-                            ]
-                        }
-                    ]
-                }
-            },
-            "kitchen": {
-                "description": "You are in a kitchen. There is a door to the west and a hatch to the cellar down below.",
-                "first_arrival_text": "You push open the door and reveal a messy kitchen.",
-                "examination_text": "Dirty dishes are piled high in the sink.",
-                "exits": {"west": "start", "down": "cellar"},
-                "items": [
-                    {
-                        "name": "sword",
-                        "description": "A sharp, shiny sword.",
-                        "events": {
-                            "take": [
-                                {
-                                    "condition": {},
-                                    "actions": [
-                                        {
-                                            "type": "print",
-                                            "message": "As you grasp the hilt, you feel a surge of power.",
-                                        }
-                                    ],
-                                }
-                            ]
-                        },
-                    }
-                ],
-            },
-            "garden": {
-                "description": "You are in a beautiful garden. There is a path leading southwest.",
-                "first_arrival_text": "You step out into the fresh air of a vibrant garden.",
-                "examination_text": "Flowers bloom in every color imaginable.",
-                "exits": {"southwest": "start"},
-                "items": [],
-            },
-            "cellar": {
-                "description": "You are in a dark, damp cellar. There is a ladder leading up.",
-                "first_arrival_text": "You climb down into the darkness.",
-                "examination_text": "It's too dark to see much.",
-                "exits": {"up": "kitchen"},
-                "items": [],
-            },
-            "treasure_room": {
-                "description": "You have found the treasure room!",
-                "first_arrival_text": "At last! You have discovered the legendary treasure room.",
-                "examination_text": "Gold glitters from every corner.",
-                "exits": {"south": "hallway"},
-                "items": [
-                    {
-                        "name": "treasure",
-                        "description": "A chest full of gold and jewels.",
-                    }
-                ],
-            },
-        }
+        self.world_map = load_world_data()
 
     def check_condition(self, condition):
         """Checks if a condition is met.

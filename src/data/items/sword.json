@@ -1,0 +1,17 @@
+{
+    "name": "sword",
+    "description": "A sharp, shiny sword.",
+    "events": {
+        "take": [
+            {
+                "condition": {},
+                "actions": [
+                    {
+                        "type": "print",
+                        "message": "As you grasp the hilt, you feel a surge of power."
+                    }
+                ]
+            }
+        ]
+    }
+}

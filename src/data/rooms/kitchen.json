@@ -1,0 +1,8 @@
+{
+    "id": "kitchen",
+    "description": "You are in a kitchen. There is a door to the west and a hatch to the cellar down below.",
+    "first_arrival_text": "You push open the door and reveal a messy kitchen.",
+    "examination_text": "Dirty dishes are piled high in the sink.",
+    "exits": {"west": "start", "down": "cellar"},
+    "items": ["sword"]
+}
