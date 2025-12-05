@@ -86,6 +86,26 @@ class Game:
         except Exception as e:
             return f"Error loading game: {e}"
 
+    def _name_matches(self, item_name, input_name):
+        """Checks if the user input matches the item name, allowing for articles.
+
+        Args:
+            item_name: The actual name of the item.
+            input_name: The name provided by the user.
+
+        Returns:
+            bool: True if it matches, False otherwise.
+        """
+        if item_name == input_name:
+            return True
+        if input_name == f"the {item_name}":
+            return True
+        if input_name == f"a {item_name}":
+            return True
+        if input_name == f"an {item_name}":
+            return True
+        return False
+
     def _init_world_map(self):
         self.world_map = {
             "start": {
@@ -459,14 +479,14 @@ class Game:
         # 1. Check direct location items
         location_items = self.world_map[self.player_location]["items"]
         for item in location_items:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 msgs, blocked = self.process_events(item, "take")
                 if blocked:
                      return "\n".join(msgs)
 
                 location_items.remove(item)
                 self.inventory.append(item)
-                output_msgs = [f"You take the {item_name}."]
+                output_msgs = [f"You take the {item['name']}."]
                 output_msgs.extend(msgs)
                 return "\n".join(output_msgs)
 
@@ -474,14 +494,14 @@ class Game:
         for item in location_items:
             if item.get("is_container") and item.get("is_open"):
                 for content in item.get("contents", []):
-                    if content["name"] == item_name:
+                    if self._name_matches(content["name"], item_name):
                         msgs, blocked = self.process_events(content, "take")
                         if blocked:
                              return "\n".join(msgs)
 
                         item["contents"].remove(content)
                         self.inventory.append(content)
-                        output_msgs = [f"You take the {item_name} from the {item['name']}."]
+                        output_msgs = [f"You take the {content['name']} from the {item['name']}."]
                         output_msgs.extend(msgs)
                         return "\n".join(output_msgs)
 
@@ -489,14 +509,14 @@ class Game:
         for item in self.inventory:
              if item.get("is_container") and item.get("is_open"):
                 for content in item.get("contents", []):
-                    if content["name"] == item_name:
+                    if self._name_matches(content["name"], item_name):
                         msgs, blocked = self.process_events(content, "take")
                         if blocked:
                              return "\n".join(msgs)
 
                         item["contents"].remove(content)
                         self.inventory.append(content)
-                        output_msgs = [f"You take the {item_name} from the {item['name']}."]
+                        output_msgs = [f"You take the {content['name']} from the {item['name']}."]
                         output_msgs.extend(msgs)
                         return "\n".join(output_msgs)
 
@@ -515,7 +535,7 @@ class Game:
         # Find item in inventory
         item_to_put = None
         for item in self.inventory:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 item_to_put = item
                 break
 
@@ -527,14 +547,14 @@ class Game:
 
         # Check inventory for container
         for item in self.inventory:
-            if item["name"] == container_name:
+            if self._name_matches(item["name"], container_name):
                 target_container = item
                 break
 
         # Check room for container
         if not target_container:
             for item in self.world_map[self.player_location]["items"]:
-                if item["name"] == container_name:
+                if self._name_matches(item["name"], container_name):
                     target_container = item
                     break
 
@@ -567,13 +587,13 @@ class Game:
         target = None
         # Check inventory
         for item in self.inventory:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 target = item
                 break
         # Check room
         if not target:
             for item in self.world_map[self.player_location]["items"]:
-                if item["name"] == item_name:
+                if self._name_matches(item["name"], item_name):
                     target = item
                     break
 
@@ -584,13 +604,13 @@ class Game:
             return f"You can't open that."
 
         if target.get("is_locked"):
-             return f"The {item_name} is locked."
+             return f"The {item['name']} is locked."
 
         if target.get("is_open"):
-            return f"The {item_name} is already open."
+            return f"The {item['name']} is already open."
 
         target["is_open"] = True
-        return f"You open the {item_name}."
+        return f"You open the {item['name']}."
 
     def close_item(self, item_name):
         """Closes a container.
@@ -604,13 +624,13 @@ class Game:
         target = None
         # Check inventory
         for item in self.inventory:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 target = item
                 break
         # Check room
         if not target:
             for item in self.world_map[self.player_location]["items"]:
-                if item["name"] == item_name:
+                if self._name_matches(item["name"], item_name):
                     target = item
                     break
 
@@ -621,10 +641,10 @@ class Game:
             return f"You can't close that."
 
         if not target.get("is_open"):
-            return f"The {item_name} is already closed."
+            return f"The {item['name']} is already closed."
 
         target["is_open"] = False
-        return f"You close the {item_name}."
+        return f"You close the {item['name']}."
 
     def drop_item(self, item_name):
         """Drops an item from the player's inventory into the current location.
@@ -636,7 +656,7 @@ class Game:
             str: A message indicating whether the item was successfully dropped or not.
         """
         for item in self.inventory:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 msgs, blocked = self.process_events(item, "drop")
 
                 if blocked:
@@ -645,7 +665,7 @@ class Game:
                 self.inventory.remove(item)
                 self.world_map[self.player_location]["items"].append(item)
 
-                output_msgs = [f"You drop the {item_name}."]
+                output_msgs = [f"You drop the {item['name']}."]
                 output_msgs.extend(msgs)
 
                 return "\n".join(output_msgs)
@@ -674,7 +694,7 @@ class Game:
         Returns:
             str: The description of the item or room, or a message if the item is not found.
         """
-        if item_name in ["room", "here"]:
+        if item_name in ["room", "here"] or self._name_matches("room", item_name):
             room = self.world_map[self.player_location]
             # Process examine events for room
             msgs, _ = self.process_events(room, "examine")
@@ -685,7 +705,7 @@ class Game:
 
         # Check inventory first
         for item in self.inventory:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
                 if item.get("is_container") and item.get("is_open"):
@@ -703,7 +723,7 @@ class Game:
 
         # Check current location items
         for item in self.world_map[self.player_location]["items"]:
-            if item["name"] == item_name:
+            if self._name_matches(item["name"], item_name):
                 msgs, _ = self.process_events(item, "examine")
                 desc = item["description"]
                 if item.get("is_container") and item.get("is_open"):
@@ -723,7 +743,7 @@ class Game:
         room = self.world_map[self.player_location]
         if "characters" in room:
             for char in room["characters"]:
-                if char["name"] == item_name:
+                if self._name_matches(char["name"], item_name):
                     msgs, _ = self.process_events(char, "examine")
                     desc = char["description"]
                     if msgs:
@@ -744,7 +764,7 @@ class Game:
         room = self.world_map[self.player_location]
         if "characters" in room:
             for char in room["characters"]:
-                if char["name"] == character_name:
+                if self._name_matches(char["name"], character_name):
                     msgs, blocked = self.process_events(char, "talk")
                     if blocked:
                         return "\n".join(msgs)

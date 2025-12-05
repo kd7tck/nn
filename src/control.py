@@ -58,18 +58,6 @@ class Control:
             "g": "take",
         }
 
-    def _filter_input(self, user_input):
-        """Filters the user input by removing stop words.
-
-        Args:
-            user_input: A list of words from the user input.
-
-        Returns:
-            list: A list of filtered words.
-        """
-        stop_words = ["a", "an", "the"]
-        return [word for word in user_input if word not in stop_words]
-
     def main_game_loop(self):
         """The main game loop.
 
@@ -99,8 +87,8 @@ class Control:
                     print("Please enter the number of your choice, or 'quit' to end the conversation.")
                 continue
 
-            # Filter input for normal commands
-            user_input = self._filter_input(raw_input)
+            # Use raw input instead of filtering stop words
+            user_input = raw_input
             if not user_input:
                 continue
 
