@@ -352,6 +352,35 @@ class Game:
         else:
             return "You can't go that way."
 
+    def _find_item_recursive(self, items_list, item_name, container_name=None):
+        """Recursively finds an item in a list of items (and their open containers).
+
+        Args:
+            items_list: The list of items to search.
+            item_name: The name of the item to find.
+            container_name: The name of the container these items are in (for message context).
+
+        Returns:
+            tuple: (item, parent_list, source_name)
+                   item: The found item dictionary.
+                   parent_list: The list containing the item (to allow removal).
+                   source_name: Name of the container or None if top-level.
+        """
+        for item in items_list:
+            if self._name_matches(item["name"], item_name):
+                return item, items_list, container_name
+
+            if item.get("is_container") and item.get("is_open"):
+                found, parent, source = self._find_item_recursive(
+                    item.get("contents", []),
+                    item_name,
+                    item["name"]
+                )
+                if found:
+                    return found, parent, source
+
+        return None, None, None
+
     def take_item(self, item_name):
         """Takes an item from the current location or a container and adds it to the player's inventory.
 
@@ -361,49 +390,49 @@ class Game:
         Returns:
             str: A message indicating whether the item was successfully taken or not.
         """
-        # 1. Check direct location items
+        # 1. Check current location items (recursive)
         location_items = self.world_map[self.player_location]["items"]
-        for item in location_items:
-            if self._name_matches(item["name"], item_name):
-                msgs, blocked = self.process_events(item, "take")
-                if blocked:
-                     return "\n".join(msgs)
+        item, parent, source = self._find_item_recursive(location_items, item_name)
 
-                location_items.remove(item)
-                self.inventory.append(item)
-                output_msgs = [f"You take the {item['name']}."]
-                output_msgs.extend(msgs)
-                return "\n".join(output_msgs)
+        if item:
+            msgs, blocked = self.process_events(item, "take")
+            if blocked:
+                return "\n".join(msgs)
 
-        # 2. Check inside open containers in location
-        for item in location_items:
-            if item.get("is_container") and item.get("is_open"):
-                for content in item.get("contents", []):
-                    if self._name_matches(content["name"], item_name):
-                        msgs, blocked = self.process_events(content, "take")
-                        if blocked:
-                             return "\n".join(msgs)
+            parent.remove(item)
+            self.inventory.append(item)
 
-                        item["contents"].remove(content)
-                        self.inventory.append(content)
-                        output_msgs = [f"You take the {content['name']} from the {item['name']}."]
-                        output_msgs.extend(msgs)
-                        return "\n".join(output_msgs)
+            if source:
+                msg = f"You take the {item['name']} from the {source}."
+            else:
+                msg = f"You take the {item['name']}."
 
-        # 3. Check inside open containers in inventory
-        for item in self.inventory:
-             if item.get("is_container") and item.get("is_open"):
-                for content in item.get("contents", []):
-                    if self._name_matches(content["name"], item_name):
-                        msgs, blocked = self.process_events(content, "take")
-                        if blocked:
-                             return "\n".join(msgs)
+            output_msgs = [msg]
+            output_msgs.extend(msgs)
+            return "\n".join(output_msgs)
 
-                        item["contents"].remove(content)
-                        self.inventory.append(content)
-                        output_msgs = [f"You take the {content['name']} from the {item['name']}."]
-                        output_msgs.extend(msgs)
-                        return "\n".join(output_msgs)
+        # 2. Check inside open containers in inventory (recursive)
+        # We must ignore items that are directly in inventory (not in a container),
+        # as the user already has them.
+        for inv_item in self.inventory:
+            if inv_item.get("is_container") and inv_item.get("is_open"):
+                item, parent, source = self._find_item_recursive(
+                    inv_item.get("contents", []),
+                    item_name,
+                    inv_item["name"]
+                )
+                if item:
+                    msgs, blocked = self.process_events(item, "take")
+                    if blocked:
+                        return "\n".join(msgs)
+
+                    parent.remove(item)
+                    self.inventory.append(item)
+
+                    msg = f"You take the {item['name']} from the {source}."
+                    output_msgs = [msg]
+                    output_msgs.extend(msgs)
+                    return "\n".join(output_msgs)
 
         return f"There is no {item_name} here."
 
@@ -571,6 +600,30 @@ class Game:
         else:
             return "Your inventory is empty."
 
+    def _get_examination_desc(self, item):
+        """Helper to get the examination description of an item.
+
+        Args:
+            item: The item dictionary.
+
+        Returns:
+            str: The full examination description including contents and events.
+        """
+        msgs, _ = self.process_events(item, "examine")
+        desc = item["description"]
+        if item.get("is_container") and item.get("is_open"):
+            contents = item.get("contents", [])
+            if contents:
+                desc += f" It contains: {self._format_item_list(contents)}."
+            else:
+                desc += " It is empty."
+        elif item.get("is_container") and not item.get("is_open"):
+            desc += " It is closed."
+
+        if msgs:
+            return desc + "\n" + "\n".join(msgs)
+        return desc
+
     def examine_item(self, item_name):
         """Examines an item in the player's inventory or the current location.
 
@@ -591,63 +644,15 @@ class Game:
                 return desc + "\n" + "\n".join(msgs)
             return desc
 
-        # Check inventory first
-        for item in self.inventory:
-            if self._name_matches(item["name"], item_name):
-                msgs, _ = self.process_events(item, "examine")
-                desc = item["description"]
-                if item.get("is_container") and item.get("is_open"):
-                    contents = item.get("contents", [])
-                    if contents:
-                        desc += f" It contains: {self._format_item_list(contents)}."
-                    else:
-                        desc += " It is empty."
-                elif item.get("is_container") and not item.get("is_open"):
-                    desc += " It is closed."
+        # Check inventory (including nested)
+        item, _, _ = self._find_item_recursive(self.inventory, item_name)
+        if item:
+            return self._get_examination_desc(item)
 
-                if msgs:
-                    return desc + "\n" + "\n".join(msgs)
-                return desc
-
-        # Check inside open containers in inventory
-        for item in self.inventory:
-            if item.get("is_container") and item.get("is_open"):
-                for content in item.get("contents", []):
-                    if self._name_matches(content["name"], item_name):
-                        msgs, _ = self.process_events(content, "examine")
-                        desc = content["description"]
-                        if msgs:
-                            return desc + "\n" + "\n".join(msgs)
-                        return desc
-
-        # Check current location items
-        for item in self.world_map[self.player_location]["items"]:
-            if self._name_matches(item["name"], item_name):
-                msgs, _ = self.process_events(item, "examine")
-                desc = item["description"]
-                if item.get("is_container") and item.get("is_open"):
-                    contents = item.get("contents", [])
-                    if contents:
-                        desc += f" It contains: {self._format_item_list(contents)}."
-                    else:
-                        desc += " It is empty."
-                elif item.get("is_container") and not item.get("is_open"):
-                    desc += " It is closed."
-
-                if msgs:
-                    return desc + "\n" + "\n".join(msgs)
-                return desc
-
-        # Check inside open containers in location
-        for item in self.world_map[self.player_location]["items"]:
-            if item.get("is_container") and item.get("is_open"):
-                for content in item.get("contents", []):
-                    if self._name_matches(content["name"], item_name):
-                        msgs, _ = self.process_events(content, "examine")
-                        desc = content["description"]
-                        if msgs:
-                            return desc + "\n" + "\n".join(msgs)
-                        return desc
+        # Check current location items (including nested)
+        item, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], item_name)
+        if item:
+            return self._get_examination_desc(item)
 
         # Check current location characters
         room = self.world_map[self.player_location]
