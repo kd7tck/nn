@@ -452,6 +452,9 @@ class Game:
         if not target_container.get("is_open"):
             return f"The {container_name} is closed."
 
+        if item_to_put is target_container:
+            return "You can't put an item inside itself."
+
         # Move item
         self.inventory.remove(item_to_put)
         if "contents" not in target_container:
