@@ -56,6 +56,9 @@ class Control:
             "ex": "examine",
             "get": "take",
             "g": "take",
+            "wait": "wait",
+            "z": "wait",
+            "time": "time",
         }
 
     def main_game_loop(self):
@@ -183,6 +186,16 @@ class Control:
                         print("Put what in what?")
                 else:
                      print("Usage: put <item> in <container>")
+            elif command == "time":
+                print(self.game.time_system.get_date_time_string())
+            elif command == "wait":
+                minutes = 10  # default wait time
+                if len(user_input) > 1 and user_input[1].isdigit():
+                    minutes = int(user_input[1])
+                print(f"You wait for {minutes} minutes.")
+                msgs = self.game.pass_time(minutes)
+                if msgs:
+                    print("\n".join(msgs))
             else:
                 print("Unknown command.")
         print("Thanks for playing!")
