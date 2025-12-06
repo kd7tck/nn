@@ -714,21 +714,19 @@ class Game:
         if not item_to_put:
             return f"You don't have a {item_name}."
 
-        # Find container
+        # Find container (using recursive search)
         target_container = None
 
         # Check inventory for container
-        for item in self.inventory:
-            if self._name_matches(item["name"], container_name):
-                target_container = item
-                break
+        item, _, _ = self._find_item_recursive(self.inventory, container_name)
+        if item:
+            target_container = item
 
         # Check room for container
         if not target_container:
-            for item in self.world_map[self.player_location]["items"]:
-                if self._name_matches(item["name"], container_name):
-                    target_container = item
-                    break
+            item, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], container_name)
+            if item:
+                target_container = item
 
         if not target_container:
             return f"You don't see a {container_name} here."
@@ -761,16 +759,15 @@ class Game:
         """
         target = None
         # Check inventory
-        for item in self.inventory:
-            if self._name_matches(item["name"], item_name):
-                target = item
-                break
+        item, _, _ = self._find_item_recursive(self.inventory, item_name)
+        if item:
+            target = item
+
         # Check room
         if not target:
-            for item in self.world_map[self.player_location]["items"]:
-                if self._name_matches(item["name"], item_name):
-                    target = item
-                    break
+            item, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], item_name)
+            if item:
+                target = item
 
         if not target:
             return f"You don't see a {item_name} here."
@@ -798,16 +795,15 @@ class Game:
         """
         target = None
         # Check inventory
-        for item in self.inventory:
-            if self._name_matches(item["name"], item_name):
-                target = item
-                break
+        item, _, _ = self._find_item_recursive(self.inventory, item_name)
+        if item:
+            target = item
+
         # Check room
         if not target:
-            for item in self.world_map[self.player_location]["items"]:
-                if self._name_matches(item["name"], item_name):
-                    target = item
-                    break
+            item, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], item_name)
+            if item:
+                target = item
 
         if not target:
             return f"You don't see a {item_name} here."
