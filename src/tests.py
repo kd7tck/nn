@@ -691,6 +691,28 @@ class TestGameLogic(unittest.TestCase):
         """
         self.game = Game()
 
+    def test_has_item_in_container(self):
+        """Test has_item condition checks items in containers.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        key = {"name": "key", "description": "A small key."}
+        bag = {
+            "name": "bag",
+            "description": "A backpack.",
+            "is_container": True,
+            "is_open": True,
+            "contents": [key]
+        }
+        self.game.inventory.append(bag)
+
+        self.assertTrue(self.game.check_condition({"has_item": "bag"}))
+        self.assertTrue(self.game.check_condition({"has_item": "key"}))
+
     def test_check_condition_basics(self):
         """Test basic conditions.
 
