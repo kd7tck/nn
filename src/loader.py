@@ -77,6 +77,13 @@ def load_characters() -> Dict[str, Dict[str, Any]]:
                 characters[char_id] = char_data
     return characters
 
+def load_global_data() -> Dict[str, Any]:
+    """Loads global game data from data/global.json."""
+    global_path = os.path.join(DATA_DIR, "global.json")
+    if os.path.exists(global_path):
+        return load_json_file(global_path)
+    return {}
+
 def load_world_data() -> Dict[str, Dict[str, Any]]:
     """Loads the entire world data including rooms, items, and characters.
 
