@@ -55,7 +55,8 @@ To get started with the template, follow these steps:
     git clone https://github.com/your-username/text-game-template.git
     cd text-game-template
     ```
-2.  **Install the dependencies:**
+2.  **Install the dependencies (Optional):**
+    The game itself requires no external dependencies to run. However, if you wish to build executables or packages, install the build dependencies:
     ```bash
     pip install -r requirements.txt
     ```
