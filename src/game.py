@@ -610,6 +610,25 @@ class Game:
         else:
             return "You can't go that way."
 
+    def _contains_recursive(self, container, item):
+        """Checks if a container recursively contains an item.
+
+        Args:
+            container: The container dictionary to search in.
+            item: The item dictionary to search for.
+
+        Returns:
+            bool: True if item is found inside container (recursively), False otherwise.
+        """
+        if container is item:
+            return True
+
+        if container.get("is_container"):
+            for child in container.get("contents", []):
+                if self._contains_recursive(child, item):
+                    return True
+        return False
+
     def _find_item_recursive(self, items_list, item_name, container_name=None):
         """Recursively finds an item in a list of items (and their open containers).
 
@@ -737,8 +756,8 @@ class Game:
         if not target_container.get("is_open"):
             return f"The {container_name} is closed."
 
-        if item_to_put is target_container:
-            return "You can't put an item inside itself."
+        if self._contains_recursive(item_to_put, target_container):
+            return "You can't put an item inside itself or its own contents."
 
         # Move item
         self.inventory.remove(item_to_put)
