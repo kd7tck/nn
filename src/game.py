@@ -5,7 +5,7 @@ including the player's location, inventory, and the world map.
 """
 import json
 from collections import defaultdict
-from src.loader import load_world_data
+from src.loader import load_world_data, load_global_data
 from src.time_system import TimeSystem
 
 
@@ -44,10 +44,12 @@ class Game:
         self.current_dialogue = None
         self.current_dialogue_node_id = None
         self.current_character_name = None
+        self.processing_global_events = False
 
         self.time_system = TimeSystem()
 
         self._init_world_map()
+        self._init_global_data()
 
     def save_game(self, filename):
         """Saves the current game state to a file.
@@ -66,7 +68,8 @@ class Game:
                 "game_state": self.game_state,
                 "world_map": self.world_map,
                 "player_stats": self.player_stats,
-                "time_system": self.time_system.to_dict()
+                "time_system": self.time_system.to_dict(),
+                "global_events": self.global_events
             }
             with open(filename, 'w') as f:
                 json.dump(data, f, indent=4)
@@ -99,6 +102,7 @@ class Game:
                 "def": 10,
                 "spd": 10
             })
+            self.global_events = data.get("global_events", [])
 
             if "time_system" in data:
                 self.time_system.from_dict(data["time_system"])
@@ -133,6 +137,10 @@ class Game:
 
     def _init_world_map(self):
         self.world_map = load_world_data()
+
+    def _init_global_data(self):
+        data = load_global_data()
+        self.global_events = data.get("events", [])
 
     def check_condition(self, condition):
         """Checks if a condition is met.
@@ -184,6 +192,65 @@ class Game:
                 if self.player_stats.get(stat, 0) > val:
                     return False
 
+        # Time conditions
+        if "time_ge" in condition:
+            if self.time_system.total_minutes < condition["time_ge"]:
+                return False
+        if "time_le" in condition:
+            if self.time_system.total_minutes > condition["time_le"]:
+                return False
+        if "time_eq" in condition:
+            if self.time_system.total_minutes != condition["time_eq"]:
+                return False
+
+        # Visited condition
+        if "visited" in condition:
+            room_id = condition["visited"].get("room")
+            count = condition["visited"].get("count", 1)
+            op = condition["visited"].get("op", "ge") # ge, le, eq
+            visited_count = self.visited_counts.get(room_id, 0)
+
+            if op == "ge" and visited_count < count:
+                return False
+            elif op == "le" and visited_count > count:
+                return False
+            elif op == "eq" and visited_count != count:
+                return False
+
+        # Item state condition
+        if "item_state" in condition:
+            item_name = condition["item_state"].get("item")
+            prop = condition["item_state"].get("property")
+            value = condition["item_state"].get("value")
+
+            # Find item
+            target_item = None
+            # Check inventory
+            found, _, _ = self._find_item_recursive(self.inventory, item_name)
+            if found:
+                target_item = found
+            else:
+                # Check room
+                found, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], item_name)
+                if found:
+                    target_item = found
+                else:
+                     # Check all rooms? Expensive but maybe needed.
+                     # For now let's assume item must be near.
+                     # Actually, users might want to check state of item anywhere.
+                     # Let's search all rooms.
+                     for room in self.world_map.values():
+                         found, _, _ = self._find_item_recursive(room["items"], item_name)
+                         if found:
+                             target_item = found
+                             break
+
+            if not target_item:
+                return False # Item not found, condition fails
+
+            if target_item.get(prop) != value:
+                return False
+
         # Check NPC stats (only valid if we are in a dialogue with a character)
         if ("npc_stat_ge" in condition or "npc_stat_le" in condition) and self.current_character_name:
             current_npc = None
@@ -213,6 +280,40 @@ class Game:
 
         return True
 
+    def check_global_events(self):
+        """Checks and processes global events.
+
+        Returns:
+             list: List of messages from triggered events.
+        """
+        if self.processing_global_events:
+            return []
+
+        self.processing_global_events = True
+        messages = []
+
+        try:
+            if not hasattr(self, 'global_events'):
+                return messages
+
+            for event in self.global_events:
+                # Skip if not repeatable and already triggered
+                if not event.get("repeatable", False) and event.get("triggered", False):
+                    continue
+
+                if self.check_condition(event.get("condition")):
+                    # Mark as triggered
+                    event["triggered"] = True
+
+                    for action in event.get("actions", []):
+                        msg = self.perform_action(action)
+                        if msg:
+                            messages.append(msg)
+        finally:
+            self.processing_global_events = False
+
+        return messages
+
     def pass_time(self, minutes):
         """Advances time and processes triggered events.
 
@@ -228,6 +329,11 @@ class Game:
             msg = self.perform_action(action)
             if msg:
                 messages.append(msg)
+
+        # Check global events after time passes
+        global_msgs = self.check_global_events()
+        messages.extend(global_msgs)
+
         return messages
 
     def perform_action(self, action):
@@ -285,6 +391,60 @@ class Game:
                  self.player_stats[stat] = self.player_stats.get(stat, 0) - value
             else: # set
                  self.player_stats[stat] = value
+
+            # Check global events immediately after stat change
+            # But we can't easily return messages here if perform_action only returns one string.
+            # However, perform_action returns ONE message. If check_global_events returns multiple,
+            # we might lose some if we don't handle it.
+            # For now, let's just print them or append to a queue?
+            # Or better, let's make perform_action capable of returning list or we handle it in caller.
+            # But caller expects single string or None.
+            # Let's concatenate with newline.
+            msgs = self.check_global_events()
+            if msgs:
+                return "\n".join(msgs)
+
+        elif action_type == "modify_item":
+            item_name = action.get("item_name")
+            prop = action.get("property")
+            value = action.get("value")
+
+            target_item = None
+            found, _, _ = self._find_item_recursive(self.inventory, item_name)
+            if found:
+                target_item = found
+            else:
+                 for room in self.world_map.values():
+                     found, _, _ = self._find_item_recursive(room["items"], item_name)
+                     if found:
+                         target_item = found
+                         break
+
+            if target_item:
+                target_item[prop] = value
+
+                # Check global events immediately after item change
+                msgs = self.check_global_events()
+                if msgs:
+                    return "\n".join(msgs)
+
+        elif action_type == "move_player":
+            location = action.get("location")
+            if location in self.world_map:
+                self.player_location = location
+                # Should we trigger enter/exit events?
+                # The existing move_player does heavy lifting.
+                # But this is a "teleport".
+                # Let's just update visited counts and maybe look?
+                self.visited_counts[location] += 1
+                return self.get_location_description(arrival=True)
+
+        elif action_type == "end_game":
+             # Simple flag for now, control loop handles it if it checks game_active
+             # But Game class doesn't have game_active flag explicitly shown in init?
+             # It has game_state.
+             self.game_state["game_over"] = True
+             return "GAME OVER"
 
         return None
 
