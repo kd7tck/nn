@@ -12,6 +12,19 @@
     "items": ["key"],
     "characters": ["guard"],
     "events": {
+        "exit_east": [
+            {
+                "condition": {
+                    "not": {"var_true": "guard_bribed"}
+                },
+                "actions": [
+                    {
+                        "type": "block",
+                        "message": "The guard steps in front of you. 'Where do you think you're going?' he grumbles."
+                    }
+                ]
+            }
+        ],
         "exit_northeast": [
             {
                 "condition": {

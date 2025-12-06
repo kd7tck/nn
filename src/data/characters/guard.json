@@ -1,10 +1,55 @@
 {
     "name": "guard",
     "description": "A grumpy looking guard standing by the door.",
-    "dialogue": "I'm watching you. Don't try anything funny.",
     "template": "base_npc",
     "stats": {
         "str": 15,
         "hp": 120
+    },
+    "dialogue": {
+        "start_node": "start",
+        "nodes": {
+            "start": {
+                "text": "I'm watching you. What do you want?",
+                "options": [
+                    {
+                        "text": "Can I go to the kitchen?",
+                        "next_node": "kitchen_request"
+                    },
+                    {
+                        "text": "I have something for you.",
+                        "condition": {"has_item": "treasure"},
+                        "next_node": "bribe"
+                    },
+                    {
+                        "text": "Nothing."
+                    }
+                ]
+            },
+            "kitchen_request": {
+                "text": "No one enters the kitchen without paying the toll. Bring me something shiny.",
+                "options": [
+                    {
+                        "text": "I'll see what I can find."
+                    }
+                ]
+            },
+            "bribe": {
+                "text": "Is that... gold? Fine, you can pass. Take this fruit, I was saving it for lunch but I'm not hungry anymore.",
+                "options": [
+                    {
+                        "text": "Deal.",
+                        "actions": [
+                            {"type": "remove_item", "item_name": "treasure"},
+                            {"type": "add_item", "item": {
+                                "name": "golden_apple",
+                                "description": "A shiny golden apple."
+                            }},
+                            {"type": "set_true", "target": "guard_bribed"}
+                        ]
+                    }
+                ]
+            }
+        }
     }
 }
