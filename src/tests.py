@@ -1879,5 +1879,86 @@ class TestDialogueStats(unittest.TestCase):
         # Verify STR increased
         self.assertEqual(self.game.player_stats["str"], 16)
 
+class TestNestedContainerInteraction(unittest.TestCase):
+    def setUp(self):
+        self.game = Game()
+        self.game.player_location = "start"
+
+        # Setup: Room contains an open box.
+        # Inside the box is a closed chest.
+        # Inside the chest is a key. (But chest is closed initially)
+
+        self.key = {
+            "name": "key",
+            "description": "A small key.",
+        }
+
+        self.chest = {
+            "name": "chest",
+            "description": "A small chest.",
+            "is_container": True,
+            "is_open": False,
+            "contents": [self.key]
+        }
+
+        self.box = {
+            "name": "box",
+            "description": "A large box.",
+            "is_container": True,
+            "is_open": True,
+            "contents": [self.chest]
+        }
+
+        self.game.world_map["start"]["items"] = [self.box]
+        self.game.inventory = []
+
+    def test_open_nested_container(self):
+        # Verify we can examine the nested chest
+        desc = self.game.examine_item("chest")
+        self.assertIn("A small chest.", desc)
+
+        # Open the chest (it is inside the box)
+        msg = self.game.open_item("chest")
+        self.assertEqual(msg, "You open the chest.")
+        self.assertTrue(self.chest["is_open"])
+
+        # Now that chest is open, we should see the key
+        desc = self.game.examine_item("key")
+        self.assertIn("A small key.", desc)
+
+    def test_close_nested_container(self):
+        self.chest["is_open"] = True
+
+        msg = self.game.close_item("chest")
+        self.assertEqual(msg, "You close the chest.")
+        self.assertFalse(self.chest["is_open"])
+
+    def test_put_item_into_nested_container(self):
+        # We need an item in inventory to put
+        gem = {"name": "gem", "description": "Shiny."}
+        self.game.inventory.append(gem)
+
+        # Open the chest first so we can put things in it
+        self.chest["is_open"] = True
+
+        # Put gem in chest (which is in box)
+        msg = self.game.put_item("gem", "chest")
+        self.assertEqual(msg, "You put the gem in the chest.")
+
+        self.assertIn(gem, self.chest["contents"])
+        self.assertNotIn(gem, self.game.inventory)
+
+    def test_put_item_into_nested_container_closed(self):
+        gem = {"name": "gem", "description": "Shiny."}
+        self.game.inventory.append(gem)
+
+        # Chest is closed
+        msg = self.game.put_item("gem", "chest")
+        self.assertEqual(msg, "The chest is closed.")
+
+        self.assertNotIn(gem, self.chest["contents"])
+        self.assertIn(gem, self.game.inventory)
+
+
 if __name__ == "__main__":
     unittest.main()
