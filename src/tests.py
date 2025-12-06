@@ -1104,6 +1104,9 @@ class TestExpandedMovement(unittest.TestCase):
         Returns:
             None
         """
+        # Ensure guard doesn't block path for this test
+        self.game.game_state["guard_bribed"] = True
+
         # Move to kitchen first
         self.game.move_player("east")
         self.assertEqual(self.game.player_location, "kitchen")

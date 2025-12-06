@@ -1,0 +1,7 @@
+{
+    "id": "sky_castle",
+    "description": "You stand in a magnificent castle in the clouds. You have won the game!",
+    "first_arrival_text": "You ascend through the portal and arrive at the Sky Castle!",
+    "exits": {"down": "garden"},
+    "items": []
+}

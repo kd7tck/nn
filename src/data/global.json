@@ -1,3 +1,39 @@
 {
-    "events": []
+    "events": [
+        {
+            "condition": {
+                "has_item": "golden_apple",
+                "in_location": "garden"
+            },
+            "actions": [
+                {
+                    "type": "modify_room",
+                    "room_id": "garden",
+                    "property": "exits",
+                    "value": {
+                        "southwest": "start",
+                        "up": "sky_castle"
+                    }
+                },
+                {
+                    "type": "modify_room",
+                    "room_id": "garden",
+                    "property": "description",
+                    "value": "You are in a beautiful garden. A magical portal has opened in the sky above!"
+                },
+                {
+                    "type": "set_true",
+                    "target": "portal_opened"
+                },
+                {
+                     "type": "remove_item",
+                     "item_name": "golden_apple"
+                },
+                {
+                    "type": "print",
+                    "message": "The golden apple hums and vanishes! A portal opens in the sky!"
+                }
+            ]
+        }
+    ]
 }
