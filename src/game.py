@@ -415,11 +415,18 @@ class Game:
             if found:
                 target_item = found
             else:
-                 for room in self.world_map.values():
-                     found, _, _ = self._find_item_recursive(room["items"], item_name)
-                     if found:
-                         target_item = found
-                         break
+                # Check current room first
+                current_room_items = self.world_map[self.player_location]["items"]
+                found, _, _ = self._find_item_recursive(current_room_items, item_name)
+                if found:
+                    target_item = found
+                else:
+                    # Check all rooms
+                    for room in self.world_map.values():
+                        found, _, _ = self._find_item_recursive(room["items"], item_name)
+                        if found:
+                            target_item = found
+                            break
 
             if target_item:
                 target_item[prop] = value
