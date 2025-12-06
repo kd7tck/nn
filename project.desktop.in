@@ -3,6 +3,6 @@ Version=1.0
 Type=Application
 Name=${PROJECT_NAME}
 Comment=A template for text-based games
-Exec=@CMAKE_INSTALL_PREFIX@/bin/run_game_linux.sh
+Exec=@CMAKE_INSTALL_PREFIX@/bin/@PROJECT_NAME@
 Categories=Game;
 Terminal=true
