@@ -6,6 +6,7 @@ including the player's location, inventory, and the world map.
 import json
 from collections import defaultdict
 from src.loader import load_world_data
+from src.time_system import TimeSystem
 
 
 class Game:
@@ -44,6 +45,8 @@ class Game:
         self.current_dialogue_node_id = None
         self.current_character_name = None
 
+        self.time_system = TimeSystem()
+
         self._init_world_map()
 
     def save_game(self, filename):
@@ -62,7 +65,8 @@ class Game:
                 "visited_counts": dict(self.visited_counts),
                 "game_state": self.game_state,
                 "world_map": self.world_map,
-                "player_stats": self.player_stats
+                "player_stats": self.player_stats,
+                "time_system": self.time_system.to_dict()
             }
             with open(filename, 'w') as f:
                 json.dump(data, f, indent=4)
@@ -95,6 +99,11 @@ class Game:
                 "def": 10,
                 "spd": 10
             })
+
+            if "time_system" in data:
+                self.time_system.from_dict(data["time_system"])
+            else:
+                self.time_system = TimeSystem()
 
             return f"Game loaded from {filename}."
         except FileNotFoundError:
@@ -204,6 +213,23 @@ class Game:
 
         return True
 
+    def pass_time(self, minutes):
+        """Advances time and processes triggered events.
+
+        Args:
+            minutes: Number of minutes to advance.
+
+        Returns:
+            list: List of messages from triggered events.
+        """
+        triggered_actions = self.time_system.advance_time(minutes)
+        messages = []
+        for action in triggered_actions:
+            msg = self.perform_action(action)
+            if msg:
+                messages.append(msg)
+        return messages
+
     def perform_action(self, action):
         """Performs an action.
 
@@ -217,6 +243,11 @@ class Game:
 
         if action_type == "print":
             return action.get("message")
+
+        elif action_type == "start_timer":
+            minutes = action.get("minutes", 0)
+            timer_actions = action.get("actions", [])
+            self.time_system.schedule_event(minutes, timer_actions)
 
         elif action_type == "set_true":
             self.game_state[action["target"]] = True
@@ -404,13 +435,16 @@ class Game:
             self.player_location = next_location
             self.visited_counts[next_location] += 1
 
+            # Pass time for movement (1 minute)
+            time_msgs = self.pass_time(1)
+
             # Process enter events
             enter_msgs, _ = self.process_events(self.world_map[next_location], "enter")
 
             desc = self.get_location_description(arrival=True)
 
             # Combine all messages
-            all_parts = exit_msgs + [desc] + enter_msgs
+            all_parts = exit_msgs + time_msgs + [desc] + enter_msgs
             return "\n".join(all_parts)
         else:
             return "You can't go that way."
