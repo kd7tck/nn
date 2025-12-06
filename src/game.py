@@ -227,12 +227,12 @@ class Game:
             # Find item
             target_item = None
             # Check inventory
-            found, _, _ = self._find_item_recursive(self.inventory, item_name)
+            found = self._find_item_system(self.inventory, item_name)
             if found:
                 target_item = found
             else:
                 # Check room
-                found, _, _ = self._find_item_recursive(self.world_map[self.player_location]["items"], item_name)
+                found = self._find_item_system(self.world_map[self.player_location]["items"], item_name)
                 if found:
                     target_item = found
                 else:
@@ -241,7 +241,7 @@ class Game:
                      # Actually, users might want to check state of item anywhere.
                      # Let's search all rooms.
                      for room in self.world_map.values():
-                         found, _, _ = self._find_item_recursive(room["items"], item_name)
+                         found = self._find_item_system(room["items"], item_name)
                          if found:
                              target_item = found
                              break
@@ -411,19 +411,19 @@ class Game:
             value = action.get("value")
 
             target_item = None
-            found, _, _ = self._find_item_recursive(self.inventory, item_name)
+            found = self._find_item_system(self.inventory, item_name)
             if found:
                 target_item = found
             else:
                 # Check current room first
                 current_room_items = self.world_map[self.player_location]["items"]
-                found, _, _ = self._find_item_recursive(current_room_items, item_name)
+                found = self._find_item_system(current_room_items, item_name)
                 if found:
                     target_item = found
                 else:
                     # Check all rooms
                     for room in self.world_map.values():
-                        found, _, _ = self._find_item_recursive(room["items"], item_name)
+                        found = self._find_item_system(room["items"], item_name)
                         if found:
                             target_item = found
                             break
@@ -673,6 +673,26 @@ class Game:
                     return found, parent, source
 
         return None, None, None
+
+    def _find_item_system(self, items_list, item_name):
+        """Recursively finds an item in a list, ignoring container state.
+
+        Args:
+            items_list: List of items to search.
+            item_name: Name of item to find.
+
+        Returns:
+            item: The found item dictionary, or None.
+        """
+        for item in items_list:
+            if self._name_matches(item["name"], item_name):
+                return item
+
+            if item.get("is_container"):
+                found = self._find_item_system(item.get("contents", []), item_name)
+                if found:
+                    return found
+        return None
 
     def take_item(self, item_name):
         """Takes an item from the current location or a container and adds it to the player's inventory.
