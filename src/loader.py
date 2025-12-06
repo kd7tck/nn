@@ -10,6 +10,24 @@ def load_json_file(filepath: str) -> Dict[str, Any]:
     with open(filepath, 'r') as f:
         return json.load(f)
 
+def recursive_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively merges two dictionaries.
+
+    Args:
+        base: The base dictionary (e.g., template).
+        override: The overriding dictionary (e.g., character data).
+
+    Returns:
+        The merged dictionary.
+    """
+    merged = copy.deepcopy(base)
+    for key, value in override.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = recursive_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
 def load_items() -> Dict[str, Dict[str, Any]]:
     """Loads all item definitions from the data/items directory."""
     items = {}
@@ -21,15 +39,42 @@ def load_items() -> Dict[str, Dict[str, Any]]:
                 items[item_id] = load_json_file(os.path.join(items_dir, filename))
     return items
 
+
+def load_templates() -> Dict[str, Dict[str, Any]]:
+    """Loads all character templates from the data/templates directory."""
+    templates = {}
+    templates_dir = os.path.join(DATA_DIR, "templates")
+    if os.path.exists(templates_dir):
+        for filename in os.listdir(templates_dir):
+            if filename.endswith(".json"):
+                template_id = filename[:-5]
+                templates[template_id] = load_json_file(os.path.join(templates_dir, filename))
+    return templates
+
+
 def load_characters() -> Dict[str, Dict[str, Any]]:
-    """Loads all character definitions from the data/characters directory."""
+    """Loads all character definitions from the data/characters directory.
+
+    Supports character templates by merging template data with character data.
+    """
+    templates = load_templates()
     characters = {}
     chars_dir = os.path.join(DATA_DIR, "characters")
     if os.path.exists(chars_dir):
         for filename in os.listdir(chars_dir):
             if filename.endswith(".json"):
                 char_id = filename[:-5]
-                characters[char_id] = load_json_file(os.path.join(chars_dir, filename))
+                char_data = load_json_file(os.path.join(chars_dir, filename))
+
+                if "template" in char_data:
+                    template_id = char_data["template"]
+                    if template_id in templates:
+                        # Recursively merge character data over the template
+                        char_data = recursive_merge(templates[template_id], char_data)
+                    else:
+                        print(f"Warning: Template '{template_id}' not found for character '{char_id}'")
+
+                characters[char_id] = char_data
     return characters
 
 def load_world_data() -> Dict[str, Dict[str, Any]]:
