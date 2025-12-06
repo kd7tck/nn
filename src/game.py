@@ -31,6 +31,13 @@ class Game:
         self.visited_counts = defaultdict(int)
         self.visited_counts["start"] = 1
         self.game_state = {}
+        self.player_stats = {
+            "hp": 100,
+            "max_hp": 100,
+            "str": 10,
+            "def": 10,
+            "spd": 10
+        }
 
         self.dialogue_active = False
         self.current_dialogue = None
@@ -54,7 +61,8 @@ class Game:
                 "inventory": self.inventory,
                 "visited_counts": dict(self.visited_counts),
                 "game_state": self.game_state,
-                "world_map": self.world_map
+                "world_map": self.world_map,
+                "player_stats": self.player_stats
             }
             with open(filename, 'w') as f:
                 json.dump(data, f, indent=4)
@@ -80,6 +88,13 @@ class Game:
             self.visited_counts = defaultdict(int, data["visited_counts"])
             self.game_state = data["game_state"]
             self.world_map = data["world_map"]
+            self.player_stats = data.get("player_stats", {
+                "hp": 100,
+                "max_hp": 100,
+                "str": 10,
+                "def": 10,
+                "spd": 10
+            })
 
             return f"Game loaded from {filename}."
         except FileNotFoundError:
@@ -150,6 +165,43 @@ class Game:
                 if self.game_state.get(var_name) != value:
                     return False
 
+        if "player_stat_ge" in condition:
+            for stat, val in condition["player_stat_ge"].items():
+                if self.player_stats.get(stat, 0) < val:
+                    return False
+
+        if "player_stat_le" in condition:
+            for stat, val in condition["player_stat_le"].items():
+                if self.player_stats.get(stat, 0) > val:
+                    return False
+
+        # Check NPC stats (only valid if we are in a dialogue with a character)
+        if ("npc_stat_ge" in condition or "npc_stat_le" in condition) and self.current_character_name:
+            current_npc = None
+            room = self.world_map[self.player_location]
+            if "characters" in room:
+                for char in room["characters"]:
+                    if char["name"] == self.current_character_name:
+                        current_npc = char
+                        break
+
+            if current_npc:
+                npc_stats = current_npc.get("stats", {})
+
+                if "npc_stat_ge" in condition:
+                    for stat, val in condition["npc_stat_ge"].items():
+                        if npc_stats.get(stat, 0) < val:
+                            return False
+
+                if "npc_stat_le" in condition:
+                    for stat, val in condition["npc_stat_le"].items():
+                        if npc_stats.get(stat, 0) > val:
+                            return False
+            else:
+                # If checking NPC stats but NPC not found, fail safely?
+                # Or assume false? Assuming false seems safer.
+                return False
+
         return True
 
     def perform_action(self, action):
@@ -191,6 +243,17 @@ class Game:
                  if item["name"] == item_name:
                       self.inventory.remove(item)
                       break
+
+        elif action_type == "modify_player_stat":
+            stat = action["stat"]
+            value = action["value"]
+            op = action.get("operation", "set")
+            if op == "add":
+                 self.player_stats[stat] = self.player_stats.get(stat, 0) + value
+            elif op == "sub":
+                 self.player_stats[stat] = self.player_stats.get(stat, 0) - value
+            else: # set
+                 self.player_stats[stat] = value
 
         return None
 

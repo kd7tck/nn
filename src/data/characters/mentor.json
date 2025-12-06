@@ -1,0 +1,118 @@
+{
+    "name": "mentor",
+    "description": "A wise old mentor figure.",
+    "template": "base_npc",
+    "stats": {
+        "str": 5,
+        "int": 20
+    },
+    "dialogue": {
+        "start_node": "intro",
+        "nodes": {
+            "intro": {
+                "text": "Greetings, traveler. I can sense your potential.",
+                "options": [
+                    {
+                        "text": "What do you mean?",
+                        "next_node": "explanation"
+                    },
+                    {
+                        "text": "[STR >= 15] I don't need your riddles. Fight me!",
+                        "condition": {
+                            "player_stat_ge": {"str": 15}
+                        },
+                        "next_node": "fight_challenge"
+                    },
+                    {
+                        "text": "[INT >= 15] You are referring to the magical aura, correct?",
+                        "condition": {
+                            "player_stat_ge": {"int": 15}
+                        },
+                        "next_node": "intellectual_chat"
+                    },
+                    {
+                        "text": "[NPC STR < 10] You look weak, old man.",
+                        "condition": {
+                            "npc_stat_le": {"str": 10}
+                        },
+                        "next_node": "weakness_comment"
+                    },
+                    {
+                        "text": "Goodbye.",
+                        "next_node": null
+                    }
+                ]
+            },
+            "explanation": {
+                "text": "You have much to learn. Train your body and mind.",
+                "options": [
+                    {
+                        "text": "Back.",
+                        "next_node": "intro"
+                    }
+                ]
+            },
+            "fight_challenge": {
+                "text": "Ho ho! You have spirit, but brute force is not everything.",
+                "options": [
+                    {
+                        "text": "I will show you!",
+                        "actions": [
+                            {
+                                "type": "modify_player_stat",
+                                "stat": "str",
+                                "value": 1,
+                                "operation": "add"
+                            }
+                        ],
+                        "next_node": "end_fight"
+                    }
+                ]
+            },
+            "intellectual_chat": {
+                "text": "Ah, a sharp mind! Rare in these parts.",
+                "options": [
+                    {
+                        "text": "Teach me more.",
+                        "actions": [
+                             {
+                                 "type": "modify_player_stat",
+                                 "stat": "int",
+                                 "value": 1,
+                                 "operation": "add"
+                             }
+                        ],
+                        "next_node": "end_intellect"
+                    }
+                ]
+            },
+            "weakness_comment": {
+                "text": "My strength lies not in my muscles, but in my experience.",
+                "options": [
+                    {
+                        "text": "Fair enough.",
+                        "next_node": "intro"
+                    }
+                ]
+            },
+            "end_fight": {
+                "text": "You feel your muscles grow from the exertion.",
+                "options": [
+                     {
+                         "text": "Leave.",
+                         "next_node": null
+                     }
+                ]
+            },
+            "end_intellect": {
+                "text": "You feel your understanding expand.",
+                "options": [
+                    {
+                        "text": "Leave.",
+                        "next_node": null
+                    }
+                ]
+            }
+        }
+    }
+}
