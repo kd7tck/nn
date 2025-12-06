@@ -160,7 +160,8 @@ class Game:
 
         if "has_item" in condition:
             item_name = condition["has_item"]
-            if not any(item["name"] == item_name for item in self.inventory):
+            found, _, _ = self._find_item_recursive(self.inventory, item_name)
+            if not found:
                 return False
 
         if "in_location" in condition:
