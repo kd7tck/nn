@@ -1,5 +1,10 @@
 {
     "name": "guard",
     "description": "A grumpy looking guard standing by the door.",
-    "dialogue": "I'm watching you. Don't try anything funny."
+    "dialogue": "I'm watching you. Don't try anything funny.",
+    "template": "base_npc",
+    "stats": {
+        "str": 15,
+        "hp": 120
+    }
 }
