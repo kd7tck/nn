@@ -1960,5 +1960,58 @@ class TestNestedContainerInteraction(unittest.TestCase):
         self.assertIn(gem, self.game.inventory)
 
 
+class TestBugFixes(unittest.TestCase):
+    def setUp(self):
+        self.game = Game()
+
+    def test_move_player_interrupted_by_teleport(self):
+        """Test that if a move is interrupted by a teleport event, the original destination's enter events are skipped."""
+        # Setup
+        self.game.world_map["room_b"] = {
+            "id": "room_b",
+            "description": "Room B",
+            "exits": {},
+            "items": [],
+            "events": {
+                "enter": [
+                    {
+                        "condition": {},
+                        "actions": [{"type": "print", "message": "Welcome to B"}]
+                    }
+                ]
+            }
+        }
+        self.game.world_map["room_c"] = {
+            "id": "room_c",
+            "description": "Room C",
+            "exits": {},
+            "items": [],
+            "events": {
+                "enter": [
+                    {
+                        "condition": {},
+                        "actions": [{"type": "print", "message": "Welcome to C"}]
+                    }
+                ]
+            }
+        }
+        self.game.world_map["start"]["exits"]["north"] = "room_b"
+
+        # Schedule teleport to Room C
+        move_action = {"type": "move_player", "location": "room_c"}
+        self.game.time_system.schedule_event(1, [move_action])
+
+        # Move
+        output = self.game.move_player("north")
+
+        # Verify
+        self.assertEqual(self.game.player_location, "room_c")
+        self.assertIn("Room C", output)
+        self.assertNotIn("Welcome to B", output)
+
+        # With the fix to perform_action, we also expect "Welcome to C"
+        self.assertIn("Welcome to C", output)
+
+
 if __name__ == "__main__":
     unittest.main()

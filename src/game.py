@@ -433,12 +433,16 @@ class Game:
             location = action.get("location")
             if location in self.world_map:
                 self.player_location = location
-                # Should we trigger enter/exit events?
-                # The existing move_player does heavy lifting.
-                # But this is a "teleport".
-                # Let's just update visited counts and maybe look?
                 self.visited_counts[location] += 1
-                return self.get_location_description(arrival=True)
+
+                # Process enter events for the new location
+                enter_msgs, _ = self.process_events(self.world_map[location], "enter")
+
+                desc = self.get_location_description(arrival=True)
+
+                if enter_msgs:
+                    return desc + "\n" + "\n".join(enter_msgs)
+                return desc
 
         elif action_type == "end_game":
              # Simple flag for now, control loop handles it if it checks game_active
@@ -599,14 +603,19 @@ class Game:
             # Pass time for movement (1 minute)
             time_msgs = self.pass_time(1)
 
-            # Process enter events
-            enter_msgs, _ = self.process_events(self.world_map[next_location], "enter")
+            if self.player_location == next_location:
+                # Process enter events
+                enter_msgs, _ = self.process_events(self.world_map[next_location], "enter")
 
-            desc = self.get_location_description(arrival=True)
+                desc = self.get_location_description(arrival=True)
 
-            # Combine all messages
-            all_parts = exit_msgs + time_msgs + [desc] + enter_msgs
-            return "\n".join(all_parts)
+                # Combine all messages
+                all_parts = exit_msgs + time_msgs + [desc] + enter_msgs
+                return "\n".join(all_parts)
+            else:
+                # We moved somewhere else during transition (e.g. trap, teleport)
+                # The description of the new place should be in time_msgs (from perform_action)
+                return "\n".join(exit_msgs + time_msgs)
         else:
             return "You can't go that way."
 
